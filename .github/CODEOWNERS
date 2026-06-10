@@ -1,0 +1,8 @@
+# Default owners
+* @ctrotech-tutor
+
+# Core package
+/packages/core/ @ctrotech-tutor
+
+# CLI package
+/packages/cli/ @ctrotech-tutor
