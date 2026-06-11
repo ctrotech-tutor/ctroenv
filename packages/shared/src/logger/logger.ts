@@ -1,6 +1,6 @@
 import { colorize, formatLevel, formatPrefix } from "./formatters"
-import type { Logger, LoggerOptions, LogLevel } from "../types/types"
-import { LOG_LEVELS } from "../types/types"
+import type { Logger, LoggerOptions, LogLevel } from "./types"
+import { LOG_LEVELS } from "./types"
 
 export function createLogger(options?: LoggerOptions): Logger {
   const {
