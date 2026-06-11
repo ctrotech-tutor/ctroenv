@@ -11,5 +11,4 @@ coverage/
 .DS_Store
 .vercel/
 .vscode/
-app/
 apps/

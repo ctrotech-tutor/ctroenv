@@ -64,19 +64,20 @@ npm view @ctroenv/core
 
 ## Version Bumping (Optional)
 
-Both packages are currently at `0.0.0`. To bump before publishing:
+All packages are at `1.0.0` (stable API from day one). Future bumps:
 
 ```bash
-# Minor bump (0.1.0)
-npm version minor --workspace=packages/shared
-npm version minor --workspace=packages/core
+# Patch: bug fixes (1.0.1)
+npm version patch --workspace=packages/shared --workspace=packages/core
 
-# Or patch bump (0.0.1)
-npm version patch --workspace=packages/shared
-npm version patch --workspace=packages/core
+# Minor: new features (1.1.0)
+npm version minor --workspace=packages/shared --workspace=packages/core
+
+# Major: breaking changes (2.0.0)
+npm version major --workspace=packages/shared --workspace=packages/core
 ```
 
-> **Important:** Version bumps create a git commit and tag. Commit/push before publishing.
+> **Important:** `npm version` creates a git commit and tag. Commit/push before publishing using `changeset` instead for changelog generation.
 
 ---
 
