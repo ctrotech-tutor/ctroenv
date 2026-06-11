@@ -1,0 +1,76 @@
+import { describe, expect, it } from "vitest"
+import { formatErrors } from "../../errors/formatter"
+import { ValidationError } from "../../errors/validation-error"
+
+describe("formatErrors()", () => {
+  it("formats missing required errors", () => {
+    const errors = [
+      new ValidationError({
+        key: "DATABASE_URL",
+        message: "Missing required environment variable: DATABASE_URL",
+        code: "missing_required",
+      }),
+      new ValidationError({
+        key: "JWT_SECRET",
+        message: "Missing required environment variable: JWT_SECRET",
+        code: "missing_required",
+        suggestion: "Required — no default",
+      }),
+    ]
+    const output = formatErrors(errors)
+    expect(output).toContain("Missing")
+    expect(output).toContain("DATABASE_URL")
+    expect(output).toContain("JWT_SECRET")
+    expect(output).not.toContain("Invalid")
+  })
+
+  it("formats invalid value errors", () => {
+    const errors = [
+      new ValidationError({
+        key: "PORT",
+        message: 'Expected a number, received "abc"',
+        code: "type_mismatch",
+        value: "abc",
+      }),
+    ]
+    const output = formatErrors(errors)
+    expect(output).toContain("Invalid")
+    expect(output).toContain("PORT")
+    expect(output).toContain("Expected a number")
+  })
+
+  it("groups missing and invalid separately", () => {
+    const errors = [
+      new ValidationError({
+        key: "MISSING_VAR",
+        message: "Missing required environment variable: MISSING_VAR",
+        code: "missing_required",
+      }),
+      new ValidationError({
+        key: "INVALID_VAR",
+        message: "Invalid value",
+        code: "invalid_value",
+        value: "bad",
+      }),
+    ]
+    const output = formatErrors(errors)
+    expect(output).toContain("Missing (1)")
+    expect(output).toContain("Invalid (1)")
+    expect(output).toContain("MISSING_VAR")
+    expect(output).toContain("INVALID_VAR")
+  })
+
+  it("includes suggestions when present", () => {
+    const errors = [
+      new ValidationError({
+        key: "PORT",
+        message: "Invalid port",
+        code: "invalid_value",
+        value: 99999,
+        suggestion: "Did you mean 3000?",
+      }),
+    ]
+    const output = formatErrors(errors)
+    expect(output).toContain("Did you mean 3000?")
+  })
+})

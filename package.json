@@ -10,11 +10,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "biome check .",
-    "lint:fix": "biome check --apply .",
+    "lint:fix": "biome check --write .",
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "clean": "rimraf packages/core/dist packages/cli/dist packages/node/dist packages/vite/dist packages/nextjs/dist",
+    "clean": "rimraf packages/core/dist packages/cli/dist packages/shared/dist packages/node/dist packages/vite/dist packages/nextjs/dist",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish",
@@ -34,7 +34,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "biome check --apply",
+      "biome check --write",
       "biome format"
     ],
     "*.{json,md,yaml}": [
