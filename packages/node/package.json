@@ -16,6 +16,9 @@
   "files": [
     "dist"
   ],
+  "dependencies": {
+    "@ctroenv/core": "^1.0.0"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
