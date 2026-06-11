@@ -1,0 +1,5 @@
+export { checkCommand } from "./check"
+export { docsCommand } from "./docs"
+export { generateCommand } from "./generate"
+export { initCommand } from "./init"
+export { validateCommand } from "./validate"

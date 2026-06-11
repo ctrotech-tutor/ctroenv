@@ -1,3 +1,2 @@
-#!/usr/bin/env node
-
-console.log("ctroenv/cli — Coming soon.")
+export { defineConfig } from "./export"
+export type { CliConfig, Format, ResolvedConfig } from "./types"
