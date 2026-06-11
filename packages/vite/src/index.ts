@@ -1,13 +1,23 @@
+import { CtroEnvError, defineEnv, formatErrors, type SchemaDefinition } from "@ctroenv/core"
 import type { Plugin } from "vite"
 
-export const version = "0.0.0"
+export interface CtroEnvPluginOptions {
+  schema: string | SchemaDefinition
+  failOnError?: boolean
+}
 
 export function viteSource() {
   return {
     get(key: string): string | undefined {
-      const env = getImportMetaEnv()
-      if (env) {
-        return env[key]
+      try {
+        const env = (import.meta as unknown as Record<string, unknown>).env as
+          | Record<string, string | undefined>
+          | undefined
+        if (env && key in env) {
+          return env[key]
+        }
+      } catch {
+        // Not in a Vite ESM environment
       }
       if (typeof process !== "undefined" && process.env) {
         return process.env[key]
@@ -17,24 +27,34 @@ export function viteSource() {
   }
 }
 
-function getImportMetaEnv(): Record<string, string> | null {
-  try {
-    // @ts-expect-error — import.meta.env is a Vite runtime feature
-    if (typeof import.meta !== "undefined" && import.meta.env) {
-      // @ts-expect-error
-      return import.meta.env
-    }
-  } catch {
-    // Not in a Vite environment
-  }
-  return null
+async function loadSchemaModule(path: string): Promise<SchemaDefinition> {
+  const mod = await import(/* @vite-ignore */ path)
+  return (mod.schema ?? mod.env ?? mod.default) as SchemaDefinition
 }
 
-export function ctroenvPlugin(): Plugin {
+export function ctroenvPlugin(opts: CtroEnvPluginOptions): Plugin {
   return {
     name: "ctroenv",
-    buildStart() {
-      // Build-time validation — implemented in Phase 3
+    async buildStart() {
+      try {
+        const schema: SchemaDefinition =
+          typeof opts.schema === "string" ? await loadSchemaModule(opts.schema) : opts.schema
+
+        defineEnv(schema, { source: viteSource() })
+
+        this.warn("✓ CtroEnv: All environment variables valid")
+      } catch (e) {
+        const message =
+          e instanceof CtroEnvError
+            ? formatErrors(e.errors)
+            : `Could not validate environment: ${(e as Error).message}`
+
+        if (opts.failOnError !== false) {
+          this.error(`✗ CtroEnv: ${message}`)
+        } else {
+          this.warn(`✗ CtroEnv: ${message}`)
+        }
+      }
     },
   }
 }

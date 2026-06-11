@@ -3,13 +3,13 @@ import type { Validator } from "../types"
 import { singleError } from "../types/validator"
 
 export interface ChainableMethods<T> {
-  optional(): Validator<T | undefined>
-  default(value: T): Validator<T>
-  describe(text: string): Validator<T>
-  secret(): Validator<T>
+  optional(): Validator<T | undefined> & ChainableMethods<T | undefined>
+  default(value: T): Validator<T> & ChainableMethods<T>
+  describe(text: string): Validator<T> & ChainableMethods<T>
+  secret(): Validator<T> & ChainableMethods<T>
   validate(
     fn: (value: T, context: { key: string; path: readonly string[] }) => string | undefined,
-  ): Validator<T>
+  ): Validator<T> & ChainableMethods<T>
 }
 
 export function applyChain<T>(validator: Validator<T>): Validator<T> & ChainableMethods<T> {

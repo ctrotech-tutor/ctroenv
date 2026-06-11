@@ -1,0 +1,6 @@
+{
+  "schema": "env.ts",
+  "sources": {
+    "default": ".env"
+  }
+}
