@@ -1,4 +1,4 @@
-# Phase 7 — Documentation Site
+# Phase 6 — Documentation Site
 
 **Status:** Ongoing (starts Phase 0, content written alongside each phase)  
 **Technology:** Next.js 15, deployed to Vercel  

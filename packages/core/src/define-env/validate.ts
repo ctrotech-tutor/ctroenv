@@ -1,4 +1,5 @@
-import { ValidationError } from "../errors"
+import type { ValidationError } from "../errors"
+import { errMissing, errWrap } from "../errors/messages"
 import type { SchemaDefinition } from "../types"
 import type { EnvSource } from "./source"
 
@@ -31,13 +32,8 @@ export function walkSchema(
         continue
       }
       errors.push(
-        new ValidationError({
-          key,
-          message: `Missing required environment variable: ${prefixedKey}`,
-          code: "missing_required",
-          suggestion: validator.metadata.description
-            ? `${validator.metadata.description}`
-            : undefined,
+        errMissing(key, {
+          description: validator.metadata.description,
         }),
       )
       continue
@@ -51,11 +47,7 @@ export function walkSchema(
     } else {
       errors.push(
         ...result.errors.map((e) => {
-          return new ValidationError({
-            key,
-            message: e.message,
-            code: e.code,
-            value: e.value ?? raw,
+          return errWrap(key, e.value ?? raw, e.message, e.code, {
             suggestion: e.suggestion,
           })
         }),

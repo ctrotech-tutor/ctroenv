@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors"
+import { errInvalid, errType } from "../errors"
 import type { Validator } from "../types"
 import type { ParseContext } from "../types/validator"
 import { parseOk, singleError } from "../types/validator"
@@ -24,34 +24,21 @@ export function number(): NumberValidator {
           value = Number(input)
           if (input.trim() === "" || Number.isNaN(value)) {
             return singleError(
-              new ValidationError({
-                key: context.key,
-                message: `Expected a number, received "${input}"`,
-                code: "type_mismatch",
-                value: input,
+              errType(context.key, `"${input}"`, "a number", {
                 suggestion: "Ensure the value is a numeric string or number.",
+                originalValue: input,
               }),
             )
           }
         } else {
           return singleError(
-            new ValidationError({
-              key: context.key,
-              message: `Expected a number, received ${typeof input}`,
-              code: "type_mismatch",
-              value: input,
-            }),
+            errType(context.key, typeof input, "a number", { originalValue: input }),
           )
         }
 
         if (!Number.isFinite(value)) {
           return singleError(
-            new ValidationError({
-              key: context.key,
-              message: `Expected a finite number, received ${value}`,
-              code: "invalid_value",
-              value: input,
-            }),
+            errInvalid(context.key, input, `Expected a finite number, received ${value}`),
           )
         }
 
@@ -68,18 +55,19 @@ export function number(): NumberValidator {
       if (!result.success) return result
       const errorMsg = fn(result.value)
       if (errorMsg) {
-        return singleError(
-          new ValidationError({
-            key: context.key,
-            message: errorMsg,
-            code: "invalid_value",
-            value: result.value,
-          }),
-        )
+        return singleError(errInvalid(context.key, result.value, errorMsg))
       }
       return result
     }, original.metadata)
-    return applyChain(wrapped) as NumberValidator
+    return applyChain(
+      Object.assign(wrapped, {
+        int: original.int,
+        positive: original.positive,
+        port: original.port,
+        min: original.min,
+        max: original.max,
+      }),
+    ) as NumberValidator
   }
 
   base.int = () =>

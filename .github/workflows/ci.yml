@@ -29,8 +29,14 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Build
+        run: npm run build
+
       - name: Test
         run: npm test
 
-      - name: Build
-        run: npm run build
+      - name: Benchmark
+        run: npm run bench
+
+      - name: Bundle size
+        run: npm run size-all

@@ -23,14 +23,22 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "size": "size-limit",
     "typecheck": "tsc --noEmit"
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "2 KB",
+      "gzip": true
+    }
+  ],
   "engines": {
     "node": ">=18"
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "keywords": [
     "environment",

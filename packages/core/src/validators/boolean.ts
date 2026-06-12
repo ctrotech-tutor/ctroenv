@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors"
+import { errType } from "../errors"
 import type { Validator } from "../types"
 import type { ParseContext } from "../types/validator"
 import { parseOk, singleError } from "../types/validator"
@@ -24,13 +24,15 @@ export function boolean(): BooleanValidator {
           if (input === 0) return parseOk(false)
         }
         return singleError(
-          new ValidationError({
-            key: context.key,
-            message: `Expected a boolean, received ${typeof input === "string" ? `"${input}"` : typeof input}`,
-            code: "type_mismatch",
-            value: input,
-            suggestion: "Use 'true', 'false', '1', or '0'.",
-          }),
+          errType(
+            context.key,
+            typeof input === "string" ? `"${input}"` : typeof input,
+            "a boolean",
+            {
+              suggestion: "Use 'true', 'false', '1', or '0'.",
+              originalValue: input,
+            },
+          ),
         )
       },
       { typeLabel: "boolean" },

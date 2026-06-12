@@ -1,53 +1,63 @@
 import type { ValidationError } from "./validation-error"
 
-const colors = {
-  reset: "\x1b[0m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  cyan: "\x1b[36m",
-  dim: "\x1b[2m",
-  bold: "\x1b[1m",
+export function hasColors(): boolean {
+  if (process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== "") return false
+  if (process.env.CI !== undefined) return false
+  if (process.env.TERM === "dumb") return false
+  return true
 }
 
-function colorize(text: string, color: keyof typeof colors): string {
-  const code = colors[color]
-  return `${code}${text}${colors.reset}`
+function style(text: string, codes: number[], useColors: boolean): string {
+  if (!useColors) return text
+  const open = codes.map((c) => `\x1b[${c}m`).join("")
+  const close = "\x1b[0m"
+  return `${open}${text}${close}`
 }
+
+const dim = (t: string, c: boolean) => style(t, [2], c)
+const red = (t: string, c: boolean) => style(t, [31], c)
+const yellow = (t: string, c: boolean) => style(t, [33], c)
+const cyan = (t: string, c: boolean) => style(t, [36], c)
 
 export function formatErrors(errors: readonly ValidationError[]): string {
+  const useColors = hasColors()
   const missing = errors.filter((e) => e.code === "missing_required")
   const invalid = errors.filter((e) => e.code !== "missing_required")
 
   const lines: string[] = []
 
   lines.push("")
-  lines.push(colorize(`  CtroEnv — ${colorize("Validation Failed", "bold")}`, "red"))
-  lines.push("")
 
   if (missing.length > 0) {
-    lines.push(colorize(`  ${colorize("●", "red")} Missing (${missing.length}):`, "red"))
+    lines.push(
+      red(style(" ●", [1], useColors), useColors) +
+        ` ${red(`Missing required (${missing.length})`, useColors)}`,
+    )
     lines.push("")
     for (const err of missing) {
-      const desc = err.suggestion ? colorize(`  ${err.suggestion}`, "dim") : ""
-      lines.push(`    ${colorize(err.key, "yellow")}${desc ? `  ${desc}` : ""}`)
+      const desc = err.suggestion ? dim(err.suggestion, useColors) : ""
+      lines.push(`   ${yellow(err.key, useColors)}${desc ? `  ${desc}` : ""}`)
     }
     lines.push("")
   }
 
   if (invalid.length > 0) {
-    lines.push(colorize(`  ${colorize("✗", "yellow")} Invalid (${invalid.length}):`, "yellow"))
+    lines.push(
+      yellow(style(" ✗", [1], useColors), useColors) +
+        ` ${yellow(`Invalid (${invalid.length})`, useColors)}`,
+    )
     lines.push("")
     for (const err of invalid) {
-      lines.push(`    ${colorize(err.key, "yellow")}`)
-      lines.push(`    ${err.message}`)
+      lines.push(`   ${yellow(err.key, useColors)}`)
+      lines.push(`   ${err.message}`)
       if (err.suggestion) {
-        lines.push(colorize(`    ${colorize("→", "cyan")} ${err.suggestion}`, "cyan"))
+        lines.push(`   ${cyan("→", useColors)} ${cyan(err.suggestion, useColors)}`)
       }
     }
     lines.push("")
   }
 
-  lines.push(colorize(`  ${colorize("→", "cyan")} Define once. Trust everywhere.`, "cyan"))
+  lines.push(` ${cyan("→", useColors)} ${dim("Define once. Trust everywhere.", useColors)}`)
   lines.push("")
 
   return lines.join("\n")

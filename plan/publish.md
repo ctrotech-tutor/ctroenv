@@ -1,6 +1,6 @@
 # Publishing Guide — CtroEnv Packages
 
-> Publish order: `@ctroenv/shared` → `@ctroenv/core` (one-by-one, in sequence).
+> Publish order: `@ctroenv/shared` → `@ctroenv/core` → `@ctroenv/cli` → `@ctroenv/node` → `@ctroenv/vite` → `@ctroenv/nextjs` (one-by-one, in sequence).
 
 ## Prerequisites
 
@@ -58,6 +58,65 @@ npm publish --workspace=packages/core
 
 # Verify
 npm view @ctroenv/core
+```
+
+---
+
+## Step 3 — Publish `@ctroenv/cli`
+
+Only after Step 2 is confirmed:
+
+```bash
+# Build fresh (builds both cli.ts entry + index.ts entry)
+npm run build --workspace=packages/cli
+
+# Dry run
+npm pack --workspace=packages/cli --dry-run
+
+# Publish
+npm publish --workspace=packages/cli
+
+# Verify
+npm view @ctroenv/cli
+```
+
+---
+
+## Step 4 — Publish `@ctroenv/node`
+
+Only after Step 3 is confirmed:
+
+```bash
+npm run build --workspace=packages/node
+npm pack --workspace=packages/node --dry-run
+npm publish --workspace=packages/node
+npm view @ctroenv/node
+```
+
+---
+
+## Step 5 — Publish `@ctroenv/vite`
+
+Only after Step 4 is confirmed:
+
+```bash
+npm run build --workspace=packages/vite
+npm pack --workspace=packages/vite --dry-run
+npm publish --workspace=packages/vite
+npm view @ctroenv/vite
+```
+
+---
+
+## Step 6 — Publish `@ctroenv/nextjs`
+
+Only after Step 5 is confirmed:
+
+```bash
+npm run build --workspace=packages/nextjs
+npm pack --workspace=packages/nextjs --dry-run
+npm publish --workspace=packages/nextjs
+npm view @ctroenv/nextjs
 ```
 
 ---

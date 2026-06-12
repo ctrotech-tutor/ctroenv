@@ -350,7 +350,7 @@ updates:
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   }
 }
 ```

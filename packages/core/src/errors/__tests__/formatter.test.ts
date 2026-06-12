@@ -1,8 +1,49 @@
-import { describe, expect, it } from "vitest"
-import { formatErrors } from "../../errors/formatter"
+import { beforeEach, describe, expect, it } from "vitest"
+import { formatErrors, hasColors } from "../../errors/formatter"
 import { ValidationError } from "../../errors/validation-error"
 
+describe("hasColors()", () => {
+  const prevNoColor = process.env.NO_COLOR
+  const prevCi = process.env.CI
+  const prevTerm = process.env.TERM
+
+  beforeEach(() => {
+    process.env.NO_COLOR = prevNoColor
+    process.env.CI = prevCi
+    process.env.TERM = prevTerm
+  })
+
+  it("returns true by default", () => {
+    delete process.env.NO_COLOR
+    delete process.env.CI
+    process.env.TERM = "xterm-256color"
+    expect(hasColors()).toBe(true)
+  })
+
+  it("returns false when NO_COLOR is set", () => {
+    process.env.NO_COLOR = "1"
+    expect(hasColors()).toBe(false)
+  })
+
+  it("returns false when CI is set", () => {
+    delete process.env.NO_COLOR
+    process.env.CI = "true"
+    expect(hasColors()).toBe(false)
+  })
+
+  it("returns false when TERM is dumb", () => {
+    delete process.env.NO_COLOR
+    delete process.env.CI
+    process.env.TERM = "dumb"
+    expect(hasColors()).toBe(false)
+  })
+})
+
 describe("formatErrors()", () => {
+  beforeEach(() => {
+    process.env.NO_COLOR = "1"
+  })
+
   it("formats missing required errors", () => {
     const errors = [
       new ValidationError({
@@ -18,7 +59,7 @@ describe("formatErrors()", () => {
       }),
     ]
     const output = formatErrors(errors)
-    expect(output).toContain("Missing")
+    expect(output).toContain("Missing required")
     expect(output).toContain("DATABASE_URL")
     expect(output).toContain("JWT_SECRET")
     expect(output).not.toContain("Invalid")
@@ -54,7 +95,7 @@ describe("formatErrors()", () => {
       }),
     ]
     const output = formatErrors(errors)
-    expect(output).toContain("Missing (1)")
+    expect(output).toContain("Missing required (1)")
     expect(output).toContain("Invalid (1)")
     expect(output).toContain("MISSING_VAR")
     expect(output).toContain("INVALID_VAR")
@@ -72,5 +113,18 @@ describe("formatErrors()", () => {
     ]
     const output = formatErrors(errors)
     expect(output).toContain("Did you mean 3000?")
+  })
+
+  it("includes 'Define once' footer", () => {
+    const errors = [
+      new ValidationError({
+        key: "PORT",
+        message: "Invalid port",
+        code: "invalid_value",
+        value: 99999,
+      }),
+    ]
+    const output = formatErrors(errors)
+    expect(output).toContain("Define once")
   })
 })

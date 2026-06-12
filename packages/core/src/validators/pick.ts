@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors"
+import { errInvalid, errType } from "../errors"
 import type { Validator } from "../types"
 import type { ParseContext } from "../types/validator"
 import { parseOk, singleError } from "../types/validator"
@@ -28,11 +28,8 @@ export function pick<T extends readonly string[]>(values: T): PickValidator<T> {
       (input: unknown, context: ParseContext) => {
         if (typeof input !== "string") {
           return singleError(
-            new ValidationError({
-              key: context.key,
-              message: `Expected a string, received ${typeof input}`,
-              code: "type_mismatch",
-              value: input,
+            errType(context.key, typeof input, `one of ${values.join(", ")}`, {
+              originalValue: input,
             }),
           )
         }
@@ -45,11 +42,7 @@ export function pick<T extends readonly string[]>(values: T): PickValidator<T> {
         const expected = values.map((v) => `'${v}'`).join(", ")
 
         return singleError(
-          new ValidationError({
-            key: context.key,
-            message: `Expected one of ${expected}, received "${input}"`,
-            code: "invalid_value",
-            value: input,
+          errInvalid(context.key, input, `Expected one of ${expected}, received "${input}"`, {
             suggestion: suggestion ? `Did you mean '${suggestion}'?` : undefined,
           }),
         )

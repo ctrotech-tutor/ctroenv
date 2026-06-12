@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors"
+import { errInvalid, errType } from "../errors"
 import type { Validator } from "../types"
 import type { ParseContext } from "../types/validator"
 import { parseOk, singleError } from "../types/validator"
@@ -20,13 +20,15 @@ export function string(): StringValidator {
       (input: unknown, context: ParseContext) => {
         if (typeof input !== "string") {
           return singleError(
-            new ValidationError({
-              key: context.key,
-              message: `Expected a string, received ${typeof input}`,
-              code: "type_mismatch",
-              value: input,
-              suggestion: "Ensure the value is wrapped in quotes.",
-            }),
+            errType(
+              context.key,
+              typeof input === "string" ? `"${input}"` : typeof input,
+              "a string",
+              {
+                suggestion: "Ensure the value is wrapped in quotes.",
+                originalValue: input,
+              },
+            ),
           )
         }
         return parseOk(input)
@@ -42,18 +44,20 @@ export function string(): StringValidator {
       if (!result.success) return result
       const errorMsg = fn(result.value)
       if (errorMsg) {
-        return singleError(
-          new ValidationError({
-            key: context.key,
-            message: errorMsg,
-            code: "invalid_value",
-            value: result.value,
-          }),
-        )
+        return singleError(errInvalid(context.key, result.value, errorMsg))
       }
       return result
     }, original.metadata)
-    return applyChain(wrapped) as StringValidator
+    return applyChain(
+      Object.assign(wrapped, {
+        url: original.url,
+        email: original.email,
+        port: original.port,
+        min: original.min,
+        max: original.max,
+        regex: original.regex,
+      }),
+    ) as StringValidator
   }
 
   base.url = () =>

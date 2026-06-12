@@ -27,8 +27,23 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "size": "size-limit",
     "typecheck": "tsc --noEmit"
   },
+  "size-limit": [
+    {
+      "name": "index (programmatic)",
+      "path": "dist/index.js",
+      "limit": "15 KB",
+      "gzip": true
+    },
+    {
+      "name": "cli (binary)",
+      "path": "dist/cli.js",
+      "limit": "50 KB",
+      "gzip": true
+    }
+  ],
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
     "@ctroenv/shared": "^1.0.0",
