@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Schema engine for CtroEnv — define, validate, and infer types for environment variables",
   "type": "module",
   "exports": {
