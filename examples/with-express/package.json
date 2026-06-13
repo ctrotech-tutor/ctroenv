@@ -1,0 +1,18 @@
+{
+  "name": "example-with-express",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@ctroenv/core": "^1.0.0",
+    "@ctroenv/node": "^1.0.0",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@ctroenv/cli": "^1.0.0",
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.0"
+  }
+}

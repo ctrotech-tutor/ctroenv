@@ -135,6 +135,7 @@ Check the [`examples/`](./examples) directory for complete project setups:
 - [Express + CtroEnv](./examples/with-express/)
 - [Vite + CtroEnv](./examples/with-vite/)
 - [Next.js + CtroEnv](./examples/with-nextjs/)
+- [CLI-driven project](./examples/with-cli/)
 - [Monorepo setup](./examples/monorepo/)
 
 ## Comparison
