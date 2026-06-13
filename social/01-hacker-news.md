@@ -1,18 +1,12 @@
-# Hacker News Post
+I built CtroEnv to solve a simple but annoying problem: managing environment variables safely in TypeScript without runtime surprises.
 
-**Title:** CtroEnv — Type-safe environment variables for TypeScript, zero dependencies
+Most Node.js apps rely on process.env directly, which is untyped and often breaks at runtime.
 
-**URL:** https://github.com/ctrotech-tutor/ctroenv
+CtroEnv provides a schema-based, TypeScript-first way to define and validate environment variables with full type inference and zero runtime dependencies in the core.
 
----
+### Example
 
-## Post (Show HN)
-
-I got tired of managing environment variables with stringly-typed process.env accesses that blow up at runtime, so I built CtroEnv.
-
-It's a TypeScript-first environment variable toolkit with zero runtime dependencies in the core package. You define a schema once, and it handles validation, type inference, documentation generation, and CLI tooling.
-
-```typescript
+```ts
 import { defineEnv, string, number, pick } from "@ctroenv/core"
 
 const env = defineEnv({
@@ -22,32 +16,53 @@ const env = defineEnv({
   NODE_ENV: pick(["dev", "staging", "prod"]),
 })
 
-// Fully inferred types — no assertions needed
-env.DATABASE_URL  // string
-env.PORT          // number
-env.NODE_ENV      // "dev" | "staging" | "prod"
-```
+env.PORT // number
+env.NODE_ENV // "dev" | "staging" | "prod"
+````
 
-**Why not just use Zod/t3-env/envalid?**
+### What it includes
 
-- **Zero dependencies** — core package is dependency-free (Zod adds 50KB+)
-- **Beautiful errors** — grouped by category with actionable suggestions, colored output, NO_COLOR support
-- **CLI built-in** — validate, generate .env.example, check for missing variables, auto-generate docs
-- **Framework adapters** — Node.js, Vite, and Next.js adapters included
-- **6 packages** organized as a monorepo — use only what you need
+* Zero-dependency core package
+* Full TypeScript inference (no assertions needed)
+* Schema-based validation
+* Helpful error messages with grouping and color support
+* CLI tools for teams
 
-The CLI is where this really shines for teams:
+### CLI
 
 ```bash
-ctroenv validate    # Validates current .env against schema with beautiful errors
-ctroenv generate    # Creates/updates .env.example from schema
-ctroenv check       # Diffs .env vs schema — great for CI
-ctroenv docs        # Generates ENVIRONMENT.md automatically
+ctroenv validate   # validate .env against schema
+ctroenv generate   # create .env.example
+ctroenv check      # compare env vs schema (CI-friendly)
+ctroenv docs       # generate ENVIRONMENT.md
 ```
 
-I'd love feedback on the API design, the error messages, and any features you think are missing. The project is MIT licensed.
+### Why I built it
 
-**Links:**
-- GitHub: https://github.com/ctrotech-tutor/ctroenv
-- Docs: https://ctroenv.vercel.app
-- npm: https://www.npmjs.com/org/ctroenv
+I wanted something lighter than existing solutions while still being structured enough for team projects and CI workflows.
+
+Most tools either:
+
+* rely on external validators
+* or don’t give good CLI/dev workflow support
+
+CtroEnv tries to stay minimal in runtime but strong in tooling.
+
+### Feedback welcome
+
+I’d appreciate feedback on:
+
+* API design
+* CLI workflow
+* missing features
+* real-world usage issues
+
+MIT licensed.
+
+---
+
+### Links
+
+* GitHub: [https://github.com/ctrotech-tutor/ctroenv](https://github.com/ctrotech-tutor/ctroenv)
+* Docs: [https://ctroenv.vercel.app](https://ctroenv.vercel.app)
+* npm: [https://www.npmjs.com/org/ctroenv](https://www.npmjs.com/org/ctroenv)
