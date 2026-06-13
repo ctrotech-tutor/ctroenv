@@ -1,8 +1,23 @@
 # Default owners
 * @ctrotech-tutor
 
-# Core package
+# Core schema engine
 /packages/core/ @ctrotech-tutor
 
-# CLI package
+# CLI tooling
 /packages/cli/ @ctrotech-tutor
+
+# Shared utilities
+/packages/shared/ @ctrotech-tutor
+
+# Node.js adapter
+/packages/node/ @ctrotech-tutor
+
+# Vite adapter
+/packages/vite/ @ctrotech-tutor
+
+# Next.js adapter
+/packages/nextjs/ @ctrotech-tutor
+
+# Documentation site
+/apps/docs/ @ctrotech-tutor
