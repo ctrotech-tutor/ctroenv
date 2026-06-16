@@ -1,0 +1,1 @@
+A terminal window taking up most of the frame showing a "ctroenv validate" command with rich colored output — grouped error sections in red (missing) and yellow (invalid), each with suggestion text. A subtle Node.js hexagon logo watermark in the background. Dark theme terminal. Blue (#2563eb) accent on the command prompt. Proportions: 1200x675 (Reddit thumbnail).

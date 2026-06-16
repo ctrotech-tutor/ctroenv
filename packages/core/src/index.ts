@@ -4,7 +4,11 @@ export type { EnvSource } from "./define-env/source"
 export { detectSource, objectSource } from "./define-env/source"
 export type { ErrorCode as ErrorCodeType } from "./errors"
 export { CtroEnvError, ErrorCode, formatErrors, ValidationError } from "./errors"
+export { defineSchema, extendSchema } from "./schema-composition"
+export type { Schema } from "./schema-composition"
 export type {
+  EnvMeta,
+  EnvResult,
   InferredEnv,
   ParseContext,
   ParseResult,

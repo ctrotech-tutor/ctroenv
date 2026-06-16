@@ -1,0 +1,1 @@
+A terminal window screenshot showing the output of "ctroenv validate" — grouped error messages with colored categories: red for "Missing required" section, yellow for "Invalid values" section. Clean dark terminal theme, monospace font. Blue (#2563eb) prompt prefix. 16:9 ratio, 1200x675.

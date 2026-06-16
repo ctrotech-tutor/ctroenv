@@ -13,6 +13,7 @@ interface ValidateOptions {
   strict: boolean
   watch: boolean
   json: Format
+  secrets?: { mask: string[]; maskWith: string }
 }
 
 function getSource(sourcePath?: string): Record<string, string | undefined> | undefined {
@@ -25,15 +26,24 @@ function displaySuccessTable(
   schema: SchemaDefinition,
   env: Record<string, unknown>,
   sourceName: string,
+  secrets?: { mask: string[]; maskWith: string },
 ): void {
+  const maskSet = new Set([
+    ...Object.entries(schema)
+      .filter(([, v]) => v.metadata.isSecret)
+      .map(([k]) => k),
+    ...(secrets?.mask ?? []),
+  ])
+  const maskWith = secrets?.maskWith ?? "••••••••"
+
   const rows: [string, string][] = []
   for (const [key, validator] of Object.entries(schema)) {
     const value = env[key]
     const meta = validator.metadata
     let displayValue: string
 
-    if (meta.isSecret) {
-      displayValue = hint("••••••••")
+    if (maskSet.has(key)) {
+      displayValue = hint(maskWith)
     } else if (value === undefined) {
       displayValue = hint("undefined")
     } else if (meta.hasDefault && env[key] === meta.defaultValue) {
@@ -57,13 +67,22 @@ function displayJsonResult(
   env: Record<string, unknown>,
   errors: readonly unknown[],
   sourceName: string,
+  secrets?: { mask: string[]; maskWith: string },
 ): void {
+  const maskSet = new Set([
+    ...Object.entries(schema)
+      .filter(([, v]) => v.metadata.isSecret)
+      .map(([k]) => k),
+    ...(secrets?.mask ?? []),
+  ])
+  const maskWith = secrets?.maskWith ?? "********"
+
   const variables = Object.entries(schema).map(([key, validator]) => {
     const meta = validator.metadata
     return {
       key,
       type: meta.typeLabel,
-      value: env[key],
+      value: maskSet.has(key) ? maskWith : env[key],
       required: !meta.optional && !meta.hasDefault,
       description: meta.description,
       isSecret: meta.isSecret,
@@ -97,9 +116,9 @@ async function runValidation(
     spinner.stop()
 
     if (options.json === "json") {
-      displayJsonResult(options.schema, env, [], sourceName)
+      displayJsonResult(options.schema, env, [], sourceName, options.secrets)
     } else {
-      displaySuccessTable(options.schema, env, sourceName)
+      displaySuccessTable(options.schema, env, sourceName, options.secrets)
     }
 
     return ExitCode.Success
@@ -108,7 +127,7 @@ async function runValidation(
 
     if (e instanceof CtroEnvError) {
       if (options.json === "json") {
-        displayJsonResult(options.schema, {}, e.errors, sourceName)
+        displayJsonResult(options.schema, {}, e.errors, sourceName, options.secrets)
       } else {
         process.stdout.write(formatErrors(e.errors))
         process.stdout.write(`\n${hint("Fix the errors above and re-run.")}\n`)

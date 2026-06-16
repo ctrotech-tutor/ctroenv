@@ -1,5 +1,5 @@
 import { CtroEnvError } from "../errors/ctroenv-error"
-import type { SchemaDefinition } from "../types"
+import type { EnvMeta, EnvResult, SchemaDefinition } from "../types"
 import { detectSource, type EnvSource, objectSource } from "./source"
 import { walkSchema } from "./validate"
 
@@ -8,12 +8,12 @@ export interface DefineEnvOptions {
   prefix?: string
 }
 
+const MASKED = "********"
+
 export function defineEnv<T extends SchemaDefinition>(
   schema: T,
   opts?: DefineEnvOptions,
-): {
-  readonly [K in keyof T]: T[K] extends import("../types").Validator<infer V> ? V : never
-} {
+): EnvResult<T> {
   const source: EnvSource = opts?.source
     ? isRecordSource(opts.source)
       ? objectSource(opts.source)
@@ -26,9 +26,80 @@ export function defineEnv<T extends SchemaDefinition>(
     throw new CtroEnvError(errors)
   }
 
-  return deepFreeze(value) as {
-    readonly [K in keyof T]: T[K] extends import("../types").Validator<infer V> ? V : never
+  const secretKeys = new Set(
+    Object.entries(schema)
+      .filter(([, v]) => v.metadata.isSecret)
+      .map(([k]) => k),
+  )
+
+  if (secretKeys.size === 0) {
+    return deepFreeze(value) as unknown as EnvResult<T>
   }
+
+  return createMaskedEnv(value, secretKeys) as unknown as EnvResult<T>
+}
+
+function createMeta(values: Record<string, unknown>): EnvMeta {
+  const meta: EnvMeta = {
+    get(key: string): unknown {
+      return values[key]
+    },
+    has(key: string): boolean {
+      return key in values
+    },
+    keys(): string[] {
+      return Object.keys(values)
+    },
+    toJSON(): Record<string, string | undefined> {
+      const result: Record<string, string | undefined> = {}
+      for (const [k, v] of Object.entries(values)) {
+        result[k] = v !== undefined ? String(v) : undefined
+      }
+      return result
+    },
+  }
+  return meta
+}
+
+function createMaskedEnv(
+  values: Record<string, unknown>,
+  secretKeys: Set<string>,
+): Record<string, unknown> & { meta: EnvMeta } {
+  const meta = createMeta(values)
+
+  const proxy = new Proxy(values, {
+    get(_target, key, _receiver) {
+      if (key === "meta") return meta
+      if (typeof key === "string" && secretKeys.has(key)) return MASKED
+      return Reflect.get(values, key)
+    },
+    has(_target, key) {
+      if (key === "meta") return true
+      return Reflect.has(values, key)
+    },
+    ownKeys(_target) {
+      return [...Reflect.ownKeys(values), "meta"]
+    },
+    getOwnPropertyDescriptor(_target, key) {
+      if (key === "meta") {
+        return {
+          configurable: true,
+          enumerable: false,
+          writable: false,
+          value: meta,
+        }
+      }
+      return Reflect.getOwnPropertyDescriptor(values, key)
+    },
+    set() {
+      throw new TypeError("Cannot assign to read-only property")
+    },
+    deleteProperty() {
+      throw new TypeError("Cannot delete property of frozen object")
+    },
+  })
+
+  return proxy as Record<string, unknown> & { meta: EnvMeta }
 }
 
 function isRecordSource(

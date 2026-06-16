@@ -8,6 +8,7 @@ import { generateCommand } from "./commands/generate"
 import { initCommand } from "./commands/init"
 import { validateCommand } from "./commands/validate"
 import { ExitCode } from "./exit-codes"
+import type { ResolvedConfig } from "./types"
 import { findSchema, loadSchema, resolveConfig } from "./utils"
 import { error as errorMsg, hint } from "./utils/output"
 
@@ -22,7 +23,7 @@ function getVersion(): string {
 }
 
 async function setupCommand(
-  commandFn: (schema: SchemaDefinition, opts: Record<string, unknown>) => Promise<number>,
+  commandFn: (schema: SchemaDefinition, config: ResolvedConfig) => Promise<number>,
   opts: Record<string, unknown>,
 ): Promise<void> {
   try {
@@ -38,7 +39,7 @@ async function setupCommand(
     process.stdout.write(`${hint(`Schema: ${schemaPath}`)}\n`)
 
     const schema = await loadSchema(schemaPath)
-    const exitCode = await commandFn(schema, opts)
+    const exitCode = await commandFn(schema, config)
     process.exit(exitCode)
   } catch (e) {
     process.stdout.write(`${errorMsg("Unexpected error:")}\n`)
@@ -78,13 +79,14 @@ program
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
     if (!program.opts().color) process.env.NO_COLOR = "1"
-    await setupCommand(async (schema) => {
+    await setupCommand(async (schema, config) => {
       return validateCommand({
         schema,
         source: opts.source,
         strict: !!opts.strict,
         watch: !!opts.watch,
         json: opts.json ? "json" : "text",
+        secrets: config.secrets,
       })
     }, opts)
   })

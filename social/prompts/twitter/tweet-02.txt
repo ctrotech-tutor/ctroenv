@@ -1,0 +1,1 @@
+A minimalist infographic showing one central "defineEnv" schema box on the left with arrows radiating to four output boxes on the right labeled "Type Inference", "Runtime Validation", ".env.example", "ENVIRONMENT.md Docs". Each output box has a small icon. Flat vector style. Blue (#2563eb) and teal (#14b8a6) color scheme. Clean lines, no unnecessary detail. 16:9 ratio, 1200x675.

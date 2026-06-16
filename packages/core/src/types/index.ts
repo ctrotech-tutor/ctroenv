@@ -1,3 +1,4 @@
+export type { EnvMeta, EnvResult } from "./env-meta"
 export type { InferredEnv } from "./infer"
 export type { SchemaDefinition } from "./schema"
 export {

@@ -1,0 +1,1 @@
+Three framework logos (Node.js hexagon, Vite lightning bolt, Next.js triangle) arranged in a row, each with a small plug/connector icon. A thin horizontal line connects them all, labeled "@ctroenv" in the middle. Flat vector style. Blue (#2563eb) and teal (#14b8a6) color scheme. 16:9 ratio, 1200x675.
