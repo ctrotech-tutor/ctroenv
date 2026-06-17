@@ -2,7 +2,7 @@ import type { SchemaDefinition } from "./schema"
 import type { Validator } from "./validator"
 
 export interface EnvMeta {
-  get(key: string): unknown
+  get(key: string): string | undefined
   has(key: string): boolean
   keys(): string[]
   toJSON(): Record<string, string | undefined>

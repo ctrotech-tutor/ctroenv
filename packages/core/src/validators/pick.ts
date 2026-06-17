@@ -9,7 +9,7 @@ export interface PickValidator<T extends readonly string[]>
   extends Validator<T[number]>,
     ChainableMethods<T[number]> {}
 
-export function pick<T extends readonly string[]>(values: T): PickValidator<T> {
+export function pick<const T extends readonly string[]>(values: T): PickValidator<T> {
   const validSet = new Set(values)
 
   function suggest(input: string): string | undefined {

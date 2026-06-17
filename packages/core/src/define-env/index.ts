@@ -37,8 +37,9 @@ export function defineEnv<T extends SchemaDefinition>(
 
 function createMeta(values: Record<string, unknown>): EnvMeta {
   const meta: EnvMeta = {
-    get(key: string): unknown {
-      return values[key]
+    get(key: string): string | undefined {
+      const v = values[key]
+      return v !== undefined ? String(v) : undefined
     },
     has(key: string): boolean {
       return key in values

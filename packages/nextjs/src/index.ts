@@ -87,25 +87,24 @@ export function withCtroEnv<T extends NextSchemaDefinition>(
   schemaConfig: T,
   nextConfig: NextConfig = {},
 ): NextConfig {
-  return {
-    ...nextConfig,
-    webpack(config, options) {
-      if (options.isServer) {
-        try {
-          defineEnv(schemaConfig)
-          console.log("✓ CtroEnv: All environment variables valid")
-        } catch (e) {
-          if (e instanceof CtroEnvError) {
-            console.error(e.errors.map((err) => `  ✗ ${err.key}: ${err.message}`).join("\n"))
-          }
-          console.error("✗ CtroEnv: Environment validation failed")
-          throw e
-        }
-      }
-      if (typeof nextConfig.webpack === "function") {
-        return nextConfig.webpack(config, options)
-      }
-      return config
-    },
+  try {
+    defineEnv(schemaConfig)
+    console.log("✓ CtroEnv: All environment variables valid")
+  } catch (e) {
+    if (e instanceof CtroEnvError) {
+      console.error(e.errors.map((err) => `  ✗ ${err.key}: ${err.message}`).join("\n"))
+    }
+    console.error("✗ CtroEnv: Environment validation failed")
+    throw e
   }
+
+  if (typeof nextConfig.webpack === "function") {
+    return {
+      ...nextConfig,
+      webpack(config, options) {
+        return nextConfig.webpack?.(config, options)
+      },
+    }
+  }
+  return nextConfig
 }
