@@ -6,12 +6,16 @@ export function defineSchema<T extends SchemaDefinition>(schema: T): Schema<T> {
   return schema
 }
 
-export function extendSchema<
-  T extends SchemaDefinition,
-  U extends SchemaDefinition,
->(base: Schema<T>, extension: U): Schema<T & U> {
+export function extendSchema<T extends SchemaDefinition, U extends SchemaDefinition>(
+  base: Schema<T>,
+  extension: U,
+): Schema<T & U> {
   const conflicts = Object.keys(base).filter((k) => k in extension)
-  if (conflicts.length > 0 && typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
+  if (
+    conflicts.length > 0 &&
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV === "development"
+  ) {
     const warn = typeof console !== "undefined" ? console.warn : undefined
     warn?.(`[ctroenv] extendSchema: keys overridden in extension — ${conflicts.join(", ")}`)
   }

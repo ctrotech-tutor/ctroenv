@@ -4,7 +4,7 @@ import { ExitCode } from "../exit-codes"
 import { divider, error, hint, success } from "../utils/output"
 
 interface InitOptions {
-  format: "ts" | "js"
+  format: "ts" | "js" | "json"
   minimal: boolean
   cwd: string
 }
@@ -65,13 +65,41 @@ export default defineConfig({
 })
 `
 
-function getTemplate(format: "ts" | "js", minimal: boolean): string {
+const JSON_FULL = `${JSON.stringify(
+  {
+    schema: "./src/env.ts",
+    sources: {
+      default: ".env",
+      production: ".production.env",
+    },
+    output: {
+      example: ".env.example",
+      docs: "ENVIRONMENT.md",
+    },
+    secrets: {
+      mask: [],
+      maskWith: "***",
+    },
+  },
+  null,
+  2,
+)}\n`
+
+const JSON_MINIMAL = `${JSON.stringify({ schema: "./src/env.ts" }, null, 2)}\n`
+
+function getTemplate(format: "ts" | "js" | "json", minimal: boolean): string {
+  if (format === "json") return minimal ? JSON_MINIMAL : JSON_FULL
   if (format === "ts") return minimal ? TS_MINIMAL : TS_FULL
   return minimal ? JS_MINIMAL : JS_FULL
 }
 
 export async function initCommand(options: InitOptions): Promise<number> {
-  const filename = options.format === "ts" ? "ctroenv.config.ts" : "ctroenv.config.js"
+  const filename =
+    options.format === "ts"
+      ? "ctroenv.config.ts"
+      : options.format === "js"
+        ? "ctroenv.config.js"
+        : "ctroenv.json"
   const filePath = resolve(options.cwd, filename)
 
   try {

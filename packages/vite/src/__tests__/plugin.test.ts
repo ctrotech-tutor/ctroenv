@@ -44,7 +44,7 @@ describe("ctroenvPlugin", () => {
   it("passes validation with inline schema (default failOnError)", async () => {
     const plugin = ctroenvPlugin({ schema: validSchema })
     const ctx = mockPluginContext()
-    await plugin.buildStart!.call(ctx as never)
+    await plugin.buildStart?.call(ctx as never)
     expect(ctx.warnings.length).toBeGreaterThan(0)
     expect(ctx.warnings[0]).toContain("valid")
   })
@@ -57,7 +57,7 @@ describe("ctroenvPlugin", () => {
       failOnError: false,
     })
     const ctx = mockPluginContext()
-    await plugin.buildStart!.call(ctx as never)
+    await plugin.buildStart?.call(ctx as never)
     expect(ctx.warnings.length).toBeGreaterThan(0)
     expect(ctx.errors.length).toBe(0)
   })

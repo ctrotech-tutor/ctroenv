@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import type { SchemaDefinition } from "@ctroenv/core"
+import { CtroEnvError, defineEnv, formatErrors, type ValidationError } from "@ctroenv/core"
 import { parse as parseDotenv } from "dotenv"
 import { ExitCode } from "../exit-codes"
 import type { Format } from "../types"
@@ -10,6 +11,7 @@ interface CheckOptions {
   source: string
   example?: string
   json: Format
+  strict?: boolean
 }
 
 interface CheckResult {
@@ -23,6 +25,12 @@ function readEnvKeys(filePath: string): string[] {
   const content = readFileSync(filePath, "utf-8")
   const parsed = parseDotenv(content)
   return Object.keys(parsed)
+}
+
+function readEnvValues(filePath: string): Record<string, string> {
+  if (!existsSync(filePath)) return {}
+  const content = readFileSync(filePath, "utf-8")
+  return parseDotenv(content)
 }
 
 function compareKeys(schema: SchemaDefinition, envKeys: string[]): CheckResult {
@@ -69,21 +77,40 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
   const envKeys = readEnvKeys(options.source)
   const result = compareKeys(options.schema, envKeys)
 
+  let validationErrors: readonly ValidationError[] | null = null
+
+  if (options.strict) {
+    try {
+      const envValues = readEnvValues(options.source)
+      defineEnv(options.schema, { source: { get: (k: string) => envValues[k] } })
+    } catch (e) {
+      if (e instanceof CtroEnvError) {
+        validationErrors = e.errors
+      }
+    }
+  }
+
   if (options.json === "json") {
-    const output = {
+    const output: Record<string, unknown> = {
       source: options.source,
       total: Object.keys(options.schema).length,
       found: result.matched.length,
       missing: result.missing,
       unused: result.unused,
-      clean: result.missing.length === 0 && result.unused.length === 0,
+      validationErrors,
+      clean: result.missing.length === 0 && result.unused.length === 0 && !validationErrors,
     }
     console.log(JSON.stringify(output, null, 2))
   } else {
     displayHumanResult(result, options.source)
+
+    if (validationErrors) {
+      process.stderr.write(`${warning("Value validation errors:")}\n`)
+      process.stderr.write(formatErrors(validationErrors))
+    }
   }
 
-  return result.missing.length > 0 || result.unused.length > 0
-    ? ExitCode.ValidationError
-    : ExitCode.Success
+  const hasErrors =
+    result.missing.length > 0 || result.unused.length > 0 || validationErrors !== null
+  return hasErrors ? ExitCode.ValidationError : ExitCode.Success
 }

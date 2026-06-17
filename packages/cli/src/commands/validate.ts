@@ -10,7 +10,6 @@ import { createSpinner, divider, error, header, hint, keyValueTable } from "../u
 interface ValidateOptions {
   schema: SchemaDefinition
   source?: string
-  strict: boolean
   watch: boolean
   json: Format
   secrets?: { mask: string[]; maskWith: string }
@@ -146,7 +145,9 @@ export async function validateCommand(options: ValidateOptions): Promise<number>
   const sourceName = options.source ?? "process.env"
 
   if (options.watch) {
-    const paths = [options.schemaPath, ...(options.source ? [options.source] : [])].filter(Boolean) as string[]
+    const paths = [options.schemaPath, ...(options.source ? [options.source] : [])].filter(
+      Boolean,
+    ) as string[]
     const watcher = watch(paths, {
       ignoreInitial: true,
       awaitWriteFinish: { stabilityThreshold: 300 },

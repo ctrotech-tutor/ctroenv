@@ -52,4 +52,32 @@ describe("init command", () => {
     const filePath = resolve(TMP, "ctroenv.config.js")
     expect(existsSync(filePath)).toBe(true)
   })
+
+  it("creates JSON config when --json", async () => {
+    const code = await initCommand({
+      format: "json",
+      minimal: false,
+      cwd: TMP,
+    })
+    expect(code).toBe(ExitCode.Success)
+    const filePath = resolve(TMP, "ctroenv.json")
+    expect(existsSync(filePath)).toBe(true)
+    const content = readFileSync(filePath, "utf-8")
+    const parsed = JSON.parse(content)
+    expect(parsed.schema).toBe("./src/env.ts")
+    expect(parsed.sources).toBeDefined()
+  })
+
+  it("creates minimal JSON config with --json --minimal", async () => {
+    const code = await initCommand({
+      format: "json",
+      minimal: true,
+      cwd: TMP,
+    })
+    expect(code).toBe(ExitCode.Success)
+    const content = readFileSync(resolve(TMP, "ctroenv.json"), "utf-8")
+    const parsed = JSON.parse(content)
+    expect(parsed.schema).toBe("./src/env.ts")
+    expect(parsed.sources).toBeUndefined()
+  })
 })

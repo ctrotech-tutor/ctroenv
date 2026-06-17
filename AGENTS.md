@@ -17,7 +17,7 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 |---------|-------------|------|
 | `string()` | `.url()`, `.email()`, `.port()`, `.min(n)`, `.max(n)`, `.regex(p)` | `Validator<string>` |
 | `number()` | `.int()`, `.port()`, `.positive()`, `.min(n)`, `.max(n)` | `Validator<number>` |
-| `boolean()` | — | `Validator<boolean>` |
+| `boolean()` | accepts `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0` | `Validator<boolean>` |
 | `pick(["a","b"])` | — | `Validator<"a" \| "b">` |
 
 ### Chainable Methods (Shared)
@@ -104,7 +104,7 @@ catch (e) {
 
 | Package | Import | Source |
 |---------|--------|--------|
-| `@ctroenv/node` | `loadEnv()` | `process.env` + `.env` files |
+| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files |
 | `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `import.meta.env` |
 | `@ctroenv/nextjs` | `defineEnv()`, `withCtroEnv()` | Server/client split |
 
@@ -113,12 +113,12 @@ catch (e) {
 ```bash
 ctroenv validate   # Validate env against schema (--source, --watch, --json, --strict)
 ctroenv generate   # Generate .env.example from schema (--output, --no-comments)
-ctroenv check      # Diff .env vs schema, CI-friendly (--source, --json)
+ctroenv check      # Diff .env vs schema, CI-friendly (--source, --json, --strict)
 ctroenv docs       # Generate ENVIRONMENT.md (--output, --format markdown|json)
-ctroenv init       # Scaffold ctroenv.config.ts (--ts, --js, --minimal)
+ctroenv init       # Scaffold ctroenv.config (--ts, --js, --json, --minimal)
 ```
 
-**Config file** (`ctroenv.config.ts`):
+**Config file** (`ctroenv.config.ts`, `ctroenv.config.js`, `ctroenv.json`):
 ```ts
 import { defineConfig } from "@ctroenv/cli"
 export default defineConfig({

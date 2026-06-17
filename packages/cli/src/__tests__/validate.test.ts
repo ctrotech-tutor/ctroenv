@@ -34,7 +34,6 @@ describe("validate command", () => {
     const code = await validateCommand({
       schema,
       source: envPath,
-      strict: false,
       watch: false,
       json: "text",
     })
@@ -52,7 +51,6 @@ describe("validate command", () => {
     const code = await validateCommand({
       schema,
       source: envPath,
-      strict: false,
       watch: false,
       json: "text",
     })
@@ -69,7 +67,6 @@ describe("validate command", () => {
     const code = await validateCommand({
       schema,
       source: envPath,
-      strict: false,
       watch: false,
       json: "json",
     })
@@ -90,7 +87,6 @@ describe("validate command", () => {
     const code = await validateCommand({
       schema,
       source: envPath,
-      strict: false,
       watch: false,
       json: "text",
     })

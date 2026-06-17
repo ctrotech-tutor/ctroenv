@@ -1,5 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs"
-import { mkdtempSync, realpathSync } from "node:fs"
+import { mkdtempSync, readFileSync, realpathSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -57,7 +56,11 @@ describe("docsCommand", () => {
 
   it("generates markdown output", async () => {
     const outputPath = join(tmpDir, "ENVIRONMENT.md")
-    const exitCode = await docsCommand({ schema: createSchema(), output: outputPath, format: "markdown" })
+    const exitCode = await docsCommand({
+      schema: createSchema(),
+      output: outputPath,
+      format: "markdown",
+    })
     expect(exitCode).toBe(ExitCode.Success)
     const content = readFileSync(outputPath, "utf-8")
     expect(content).toContain("# Environment Variables Reference")
@@ -71,7 +74,11 @@ describe("docsCommand", () => {
 
   it("generates JSON output", async () => {
     const outputPath = join(tmpDir, "env.json")
-    const exitCode = await docsCommand({ schema: createSchema(), output: outputPath, format: "json" })
+    const exitCode = await docsCommand({
+      schema: createSchema(),
+      output: outputPath,
+      format: "json",
+    })
     expect(exitCode).toBe(ExitCode.Success)
     const content = JSON.parse(readFileSync(outputPath, "utf-8"))
     expect(content.count).toBe(3)
@@ -82,7 +89,11 @@ describe("docsCommand", () => {
 
   it("includes description when present", async () => {
     const outputPath = join(tmpDir, "ENVIRONMENT.md")
-    const exitCode = await docsCommand({ schema: createSchema(), output: outputPath, format: "markdown" })
+    const exitCode = await docsCommand({
+      schema: createSchema(),
+      output: outputPath,
+      format: "markdown",
+    })
     expect(exitCode).toBe(ExitCode.Success)
     const content = readFileSync(outputPath, "utf-8")
     expect(content).toContain("Postgres connection string")

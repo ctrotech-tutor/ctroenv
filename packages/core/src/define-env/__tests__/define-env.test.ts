@@ -43,8 +43,12 @@ describe("defineEnv()", () => {
 
   it("freezes the returned object", () => {
     const env = defineEnv({ KEY: string() }, { source: { KEY: "value" } })
-    expect(() => { (env as Record<string, unknown>).KEY = "new" }).toThrow(TypeError)
-    expect(() => { delete (env as Record<string, unknown>).KEY }).toThrow(TypeError)
+    expect(() => {
+      ;(env as Record<string, unknown>).KEY = "new"
+    }).toThrow(TypeError)
+    expect(() => {
+      delete (env as Record<string, unknown>).KEY
+    }).toThrow(TypeError)
   })
 
   it("strips prefix when configured", () => {
@@ -109,19 +113,13 @@ describe("defineEnv()", () => {
     })
 
     it("env.meta.has() works correctly", () => {
-      const env = defineEnv(
-        { KEY: string().secret() },
-        { source: { KEY: "value" } },
-      )
+      const env = defineEnv({ KEY: string().secret() }, { source: { KEY: "value" } })
       expect(env.meta.has("KEY")).toBe(true)
       expect(env.meta.has("NONEXISTENT")).toBe(false)
     })
 
     it("env.meta.keys() returns all keys", () => {
-      const env = defineEnv(
-        { A: string(), B: string().secret() },
-        { source: { A: "a", B: "b" } },
-      )
+      const env = defineEnv({ A: string(), B: string().secret() }, { source: { A: "a", B: "b" } })
       expect(env.meta.keys()).toEqual(["A", "B"])
     })
 
@@ -138,10 +136,7 @@ describe("defineEnv()", () => {
     })
 
     it("does not mask secrets in meta.toJSON()", () => {
-      const env = defineEnv(
-        { SECRET: string().secret() },
-        { source: { SECRET: "hidden" } },
-      )
+      const env = defineEnv({ SECRET: string().secret() }, { source: { SECRET: "hidden" } })
       // meta.toJSON() returns string values of all keys (for serialization)
       expect(env.meta.toJSON()).toEqual({ SECRET: "hidden" })
     })
@@ -149,22 +144,23 @@ describe("defineEnv()", () => {
     it("masks secret values in error output", () => {
       try {
         defineEnv(
-          { SECRET: string().secret().validate(() => "always fails") },
+          {
+            SECRET: string()
+              .secret()
+              .validate(() => "always fails"),
+          },
           { source: { SECRET: "some-value" } },
         )
         expect.unreachable("Should have thrown")
       } catch (e) {
         const errStr = String(e)
         expect(errStr).not.toContain("some-value")
-        expect(errStr).not.toContain("********")  // value field is masked
+        expect(errStr).not.toContain("********") // value field is masked
       }
     })
 
     it("meta is accessible but non-enumerable", () => {
-      const env = defineEnv(
-        { KEY: string().secret() },
-        { source: { KEY: "value" } },
-      )
+      const env = defineEnv({ KEY: string().secret() }, { source: { KEY: "value" } })
       const keys = Object.keys(env)
       expect(keys).not.toContain("meta")
       expect(env.meta).toBeDefined()
@@ -172,11 +168,10 @@ describe("defineEnv()", () => {
     })
 
     it("secret-only schema still freezes via Proxy", () => {
-      const env = defineEnv(
-        { KEY: string().secret() },
-        { source: { KEY: "value" } },
-      )
-      expect(() => { (env as Record<string, unknown>).NEW = "x" }).toThrow()
+      const env = defineEnv({ KEY: string().secret() }, { source: { KEY: "value" } })
+      expect(() => {
+        ;(env as Record<string, unknown>).NEW = "x"
+      }).toThrow()
     })
   })
 })

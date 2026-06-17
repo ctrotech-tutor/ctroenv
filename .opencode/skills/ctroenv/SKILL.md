@@ -191,6 +191,7 @@ export const env = defineEnv({
 
 ### cmd: `ctroenv check` (CI-friendly)
 `--source <path>` `.env` file to check (default: `.env`)
+`--strict` Validate values against schema validators
 `--json` JSON output
 Exit code 0 = clean, 1 = differences found
 
@@ -201,6 +202,7 @@ Exit code 0 = clean, 1 = differences found
 ### cmd: `ctroenv init`
 `--ts` TypeScript config (default)
 `--js` JavaScript config
+`--json` JSON config
 `--minimal` Minimal config
 
 ### Config File (`ctroenv.config.ts`)

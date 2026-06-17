@@ -19,24 +19,95 @@ export function nodeSource(): EnvSource {
   }
 }
 
-function parseEnvFile(content: string): Record<string, string> {
+export function parseEnvFile(content: string): Record<string, string> {
   const result: Record<string, string> = {}
-  for (const raw of content.split("\n")) {
-    const line = raw.trim()
+  const lines = content.split("\n")
+  let continuation = ""
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i] as string
+    let line = raw.trim()
+
+    if (continuation) {
+      const trimmed = line.endsWith("\\") ? line.slice(0, -1).trimEnd() : line
+      continuation += `\n${trimmed}`
+      if (!line.endsWith("\\")) {
+        const eq = continuation.indexOf("=")
+        const key = continuation
+          .slice(0, eq)
+          .trim()
+          .replace(/^export\s+/, "")
+        let value = continuation.slice(eq + 1)
+        value = parseEnvValue(value)
+        result[key] = interpolate(value, result)
+        continuation = ""
+      }
+      continue
+    }
+
     if (!line || line.startsWith("#")) continue
+
+    if (line.startsWith("export ")) {
+      line = line.slice(7).trimStart()
+    }
+
     const eq = line.indexOf("=")
     if (eq === -1) continue
+
     const key = line.slice(0, eq).trim()
     let value = line.slice(eq + 1).trim()
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
+
+    if (value.endsWith("\\") && !isQuoted(value)) {
+      continuation = `${key}=${value.slice(0, -1).trimEnd()}`
+      continue
     }
-    result[key] = value
+
+    value = parseEnvValue(value)
+    result[key] = interpolate(value, result)
   }
+
   return result
+}
+
+function isQuoted(value: string): boolean {
+  return (
+    (value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))
+  )
+}
+
+function parseEnvValue(value: string): string {
+  value = value.trim()
+
+  if (isQuoted(value)) {
+    value = value.slice(1, -1)
+    value = value.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\n/g, "\n")
+    return value
+  }
+
+  const hashIndex = value.indexOf("#")
+  if (hashIndex !== -1) {
+    const before = value.slice(0, hashIndex).trimEnd()
+    const after = value.slice(hashIndex + 1)
+    if (after.trim() !== "" && !isQuoted(before)) {
+      value = before
+    }
+  }
+
+  return value
+}
+
+function interpolate(value: string, env: Record<string, string>): string {
+  const SENTINEL = "\x00"
+  return value
+    .replace(/\$\$/g, SENTINEL)
+    .replace(/\$\{(\w+)\}|\$(\w+)/g, (match, brace, simple) => {
+      const name = brace ?? simple ?? ""
+      if (name in env) return env[name] as string
+      if (process.env[name] !== undefined) return process.env[name] as string
+      return match
+    })
+    .split(SENTINEL)
+    .join("$")
 }
 
 const ENV_FILES = [".env", `.env.${process.env.NODE_ENV ?? "development"}`, ".env.local"]

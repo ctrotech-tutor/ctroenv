@@ -27,7 +27,11 @@ function getVersion(): string {
 }
 
 async function setupCommand(
-  commandFn: (schema: SchemaDefinition, config: ResolvedConfig, schemaPath: string) => Promise<number>,
+  commandFn: (
+    schema: SchemaDefinition,
+    config: ResolvedConfig,
+    schemaPath: string,
+  ) => Promise<number>,
   opts: Record<string, unknown>,
 ): Promise<void> {
   try {
@@ -66,10 +70,12 @@ program
   .description("Scaffold a ctroenv config file")
   .option("--ts", "Generate TypeScript config (default)")
   .option("--js", "Generate JavaScript config")
+  .option("--json", "Generate JSON config")
   .option("--minimal", "Generate minimal config")
   .action(async (opts) => {
+    const format = opts.json ? "json" : opts.js ? "js" : "ts"
     const exitCode = await initCommand({
-      format: opts.js ? "js" : "ts",
+      format,
       minimal: !!opts.minimal,
       cwd: process.cwd(),
     })
@@ -79,16 +85,14 @@ program
 program
   .command("validate")
   .description("Validate environment variables against schema")
-  .option("--source <path>", "Source env file (default: process.env)")
-  .option("--strict", "Treat warnings as errors")
+  .option("--source <path>", "Source env file (default: process.env or config sources.default)")
   .option("--watch", "Watch for changes and re-validate")
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
     await setupCommand(async (schema, config, schemaPath) => {
       return validateCommand({
         schema,
-        source: opts.source,
-        strict: !!opts.strict,
+        source: opts.source ?? config.sources?.default,
         watch: !!opts.watch,
         schemaPath,
         json: opts.json ? "json" : "text",
@@ -114,13 +118,15 @@ program
 program
   .command("check")
   .description("Compare .env against schema")
-  .option("--source <path>", "Source env file to check", ".env")
+  .option("--source <path>", "Source env file to check")
+  .option("--strict", "Also validate values against schema")
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
-    await setupCommand(async (schema, _config, _schemaPath) => {
+    await setupCommand(async (schema, config, _schemaPath) => {
       return checkCommand({
         schema,
-        source: opts.source,
+        source: opts.source ?? config.sources?.default ?? ".env",
+        strict: !!opts.strict,
         json: opts.json ? "json" : "text",
       })
     }, opts)

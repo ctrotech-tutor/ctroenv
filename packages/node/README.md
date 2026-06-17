@@ -29,6 +29,7 @@ const env = defineEnv(schema, {
 |---|---|
 | `loadEnv(opts?)` | Load `.env` files and return an `EnvSource` |
 | `nodeSource()` | Create an `EnvSource` from `process.env` |
+| `parseEnvFile(content)` | Parse a `.env` file string into key-value pairs |
 
 ### loadEnv
 
@@ -45,6 +46,22 @@ nodeSource(): EnvSource
 ```
 
 Simple `process.env` wrapper.
+
+### parseEnvFile
+
+```ts
+parseEnvFile(content: string): Record<string, string>
+```
+
+Parses a raw `.env` file string. Supports:
+
+- Comments (`#`)
+- `export KEY=val` prefix
+- Quoted values (`"..."` and `'...'`)
+- Inline comments: `KEY=val # comment`
+- Multiline values with trailing `\`
+- Variable interpolation: `KEY=$OTHER` and `KEY=${OTHER}`
+- Escaped quotes: `KEY=it's` or `KEY=val\"ue`
 
 ## Documentation
 

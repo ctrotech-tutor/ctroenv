@@ -32,4 +32,9 @@ describe("findSchema", () => {
     const result = findSchema(resolve(FIXTURES, ".."))
     expect(result).toBeNull()
   })
+
+  it("searches for env.json paths", () => {
+    const result = findSchema(resolve(FIXTURES, ".."))
+    expect(result).toBeNull()
+  })
 })

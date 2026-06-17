@@ -16,8 +16,10 @@ export function boolean(): BooleanValidator {
         }
         if (typeof input === "string") {
           const lower = input.trim().toLowerCase()
-          if (lower === "true" || lower === "1" || lower === "yes" || lower === "on") return parseOk(true)
-          if (lower === "false" || lower === "0" || lower === "no" || lower === "off") return parseOk(false)
+          if (lower === "true" || lower === "1" || lower === "yes" || lower === "on")
+            return parseOk(true)
+          if (lower === "false" || lower === "0" || lower === "no" || lower === "off")
+            return parseOk(false)
         }
         if (typeof input === "number") {
           if (input === 1) return parseOk(true)

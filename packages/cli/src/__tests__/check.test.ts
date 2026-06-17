@@ -91,4 +91,64 @@ describe("check command", () => {
     expect(parsed.missing).toContain("PORT")
     expect(parsed.missing).toContain("NODE_ENV")
   })
+
+  it("passes strict check with valid values", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      ["DATABASE_URL=postgres://localhost/db", "PORT=4000", "NODE_ENV=prod"].join("\n"),
+      "utf-8",
+    )
+
+    const code = await checkCommand({
+      schema,
+      source: envPath,
+      strict: true,
+      json: "text",
+    })
+    expect(code).toBe(ExitCode.Success)
+  })
+
+  it("fails strict check with invalid values", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      ["DATABASE_URL=not-a-url", "PORT=abc", "NODE_ENV=prod"].join("\n"),
+      "utf-8",
+    )
+
+    const code = await checkCommand({
+      schema,
+      source: envPath,
+      strict: true,
+      json: "text",
+    })
+    expect(code).toBe(ExitCode.ValidationError)
+  })
+
+  it("includes validation errors in JSON output with --strict", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      ["DATABASE_URL=not-a-url", "PORT=abc", "NODE_ENV=prod"].join("\n"),
+      "utf-8",
+    )
+
+    const logs: string[] = []
+    const spy = vi.spyOn(console, "log").mockImplementation((...args) => logs.push(args.join(" ")))
+
+    const code = await checkCommand({
+      schema,
+      source: envPath,
+      strict: true,
+      json: "json",
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.ValidationError)
+    const parsed = JSON.parse(logs[0])
+    expect(parsed.validationErrors).not.toBeNull()
+    expect(parsed.validationErrors.length).toBeGreaterThan(0)
+  })
 })

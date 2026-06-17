@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { defineEnv } from "../../define-env"
-import { string, number, pick } from "../../validators"
+import { number, string } from "../../validators"
 import { defineSchema, extendSchema } from "../index"
 
 describe("defineSchema()", () => {

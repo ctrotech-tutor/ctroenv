@@ -10,6 +10,8 @@ const SEARCH_PATHS = [
   "src/env/index.js",
   "env.js",
   "env.config.js",
+  "env.json",
+  "env.config.json",
 ]
 
 export function findSchema(cwd: string, configPath?: string | null): string | null {
