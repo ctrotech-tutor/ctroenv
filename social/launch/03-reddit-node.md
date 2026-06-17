@@ -40,7 +40,7 @@ $ ctroenv docs        # Generates ENVIRONMENT.md
 - CLI is built-in from day one (not an afterthought)
 - Framework adapters for Node, Vite, and Next.js
 
-I'd especially love feedback on the error message format and the CLI commands. What's missing? What would make you switch from your current setup?
+What's your biggest pain point with env vars in Node? For me it was always catching missing vars at deploy time vs startup. Does the CLI workflow here solve that better than what you're using?
 
 GitHub: https://github.com/ctrotech-tutor/ctroenv
 npm: https://www.npmjs.com/org/ctroenv

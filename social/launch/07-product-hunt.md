@@ -43,9 +43,9 @@ The idea is simple: define your environment schema once, and CtroEnv handles val
 
 The core package has zero dependencies — it's just TypeScript. The CLI can validate your current .env, generate .env.example from your schema, and even auto-write ENVIRONMENT.md for your README.
 
-I'd love to hear your feedback and what features you'd want next. There's a roadmap in the repo covering ESLint plugin, VSCode extension, and secret vault features.
+What's your env variable workflow look like? I'm especially curious about teams using monorepos — the schema composition feature in v1.1.0 came directly from our own pain managing shared vars across packages.
 
-Thanks for checking it out! 🙏
+Roadmap covers ESLint plugin, VSCode extension, and secret vault integrations over on the repo.
 
 **First image:** Screenshot of beautiful error output showing grouped missing/invalid variables
 **Second image:** Code example showing defineEnv schema

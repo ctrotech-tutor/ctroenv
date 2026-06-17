@@ -7,13 +7,13 @@ series: Mastering Environment Variables in TypeScript with CtroEnv
 cover_image: https://ctroenv.vercel.app/og.png
 ---
 
-Environment variables occupy a weird space in software. They're not exactly secrets, not exactly configuration — they're somewhere in between. And most tools treat them one way or the other: either you get full visibility (and risk `console.log` leaking a database password into your logs) or you get zero visibility (and debugging becomes guesswork).
+I accidentally logged a JWT secret to the console while debugging a test. Twice. The first time I thought "eh, it's just dev." The second time I realized the problem wasn't me — it was that my env tool treated secrets and config the same way. No distinction. No protection. Just a flat bag of strings where a `console.log(env)` dumped everything.
 
-CtroEnv v1.1.0 introduces two features that address this tension head-on.
+That's the gap v1.1.0 tries to close.
 
 ## Runtime Secret Masking
 
-The core insight: secrets should be invisible by default, accessible by intent.
+The API is simple — add `.secret()` to any validator:
 
 ```typescript
 import { defineEnv, string } from "@ctroenv/core"
@@ -24,34 +24,34 @@ const env = defineEnv({
 })
 ```
 
-When you mark a validator with `.secret()`, the returned env object wraps itself in a **Proxy**:
+Now `env.JWT_SECRET` returns `"********"` instead of the real value:
 
 ```typescript
-console.log(env.JWT_SECRET)      // "********" — masked automatically
+console.log(env.JWT_SECRET)      // "********"
 console.log(env.DATABASE_URL)    // "postgresql://..." — visible as usual
 
-// Access the real value explicitly:
+// Real value when you need it:
 env.meta.get("JWT_SECRET")       // "supersecretkey..."
 env.meta.keys()                  // ["JWT_SECRET"]
 env.meta.has("JWT_SECRET")       // true
 ```
 
-This means accidental leaks through `console.log`, error reports, or `JSON.stringify` simply don't happen:
+This means `console.log(env)`, error reports, and `JSON.stringify` are safe by default:
 
 ```typescript
 JSON.stringify(env)
 // {"DATABASE_URL":"postgresql://...","JWT_SECRET":"********"}
 ```
 
-The `.meta` object is non-enumerable — it won't appear in `Object.keys()`, `for...in`, or spread operators. You have to explicitly reach for it.
+`.meta` is non-enumerable — it won't show up in `Object.keys()`, `for...in`, or spreads. You have to reach for it explicitly.
 
 ### Why a Proxy?
 
-If you're thinking "why not just `Object.freeze`?" — good question. The ES Proxy spec prevents a `get` trap from returning different values than the target for non-configurable properties. Since we want `env.JWT_SECRET` to return `"********"` while the real value lives elsewhere, we use a Proxy with `set`/`deleteProperty` traps instead of freezing. The result behaves identically to a frozen object for all mutation attempts.
+`Object.freeze` can't intercept reads. The ES Proxy spec prevents a `get` trap from returning different values for non-configurable target properties. So instead of freezing, we use a Proxy with `set`/`deleteProperty` traps. The result feels identical — you can't mutate it, but reads on secret keys get masked.
 
 ### Error Messages Are Safe Too
 
-Secret values are automatically redacted in error output. If a validation fails, the raw value never appears:
+Secret values are redacted in error output automatically:
 
 ```typescript
 try {
@@ -65,25 +65,25 @@ try {
 
 ## Schema Composition for Monorepos
 
-The second major feature is aimed at teams managing multiple services from a single repository. Previously, each service had to duplicate common schema definitions. Now you can compose them:
+The second feature comes from working on a monorepo ourselves. We had three packages (`shared`, `api`, `worker`) all needing `DATABASE_URL` and `JWT_SECRET`, but each needing their own specific vars too. Before, we copy-pasted. After, we composed:
 
 ```typescript
 import { defineSchema, extendSchema, defineEnv, string, number } from "@ctroenv/core"
 
-// Define shared variables once
+// Define shared vars once
 const base = defineSchema({
   DATABASE_URL: string().url(),
   REDIS_URL: string().url().optional(),
   LOG_LEVEL: string().default("info"),
 })
 
-// API service extends shared
+// API service extends
 const apiSchema = extendSchema(base, {
   PORT: number().port().default(4000),
   API_KEY: string().secret(),
 })
 
-// Worker service extends shared
+// Worker extends
 const workerSchema = extendSchema(base, {
   QUEUE_CONCURRENCY: number().positive().default(5),
   JOB_TIMEOUT: number().positive().default(30000),
@@ -96,19 +96,18 @@ env.API_KEY      // "********" — secret + inherited
 
 ### Merge Semantics
 
-Extension keys always override base keys. In development mode (`NODE_ENV=development`), conflicts are logged as warnings so you catch accidental overrides early.
+Extension keys override base keys. Dev mode (`NODE_ENV=development`) logs a warning on conflict so you don't accidentally shadow a shared var.
 
-The pattern composes naturally:
+Chaining works naturally:
 
 ```typescript
-// Chaining: base → staging → production
-const stagingSchema = extendSchema(base, { /* staging overrides */ })
-const prodSchema = extendSchema(stagingSchema, { /* prod overrides */ })
+const stagingSchema = extendSchema(base, { /* overrides */ })
+const prodSchema = extendSchema(stagingSchema, { /* overrides */ })
 ```
 
-### Real-World Pattern: Monorepo Example
+### Real Example
 
-The official repo now ships a complete [monorepo example](https://github.com/ctrotech-tutor/ctroenv/tree/main/examples/monorepo) with three packages (`shared`, `api`, `worker`):
+We shipped a [monorepo example](https://github.com/ctrotech-tutor/ctroenv/tree/main/examples/monorepo) with the repo:
 
 ```
 monorepo/
@@ -121,49 +120,28 @@ monorepo/
     worker/src/index.ts         # defineEnv(workerSchema)
 ```
 
-Each package loads env from the root `.env` using `loadEnv({ path: "../.." })`, keeping everything in sync without duplication.
+Each package loads env from root via `loadEnv({ path: "../.." })`. One `.env` file, three schemas.
 
-## AGENTS.md — Universal AI Agent Guide
+## AGENTS.md
 
-This one's for the tooling nerds. CtroEnv now ships an `AGENTS.md` at the repo root — a single file that every major AI coding tool reads automatically:
+CtroEnv now ships an `AGENTS.md` at the repo root. It covers the API, chain order rules, error handling, CLI commands, and anti-patterns. Any AI agent that lands on the repo reads it automatically — opencode, Cursor, Copilot, Claude Code, Cline.
 
-- **opencode** — reads `AGENTS.md` natively
-- **Cursor** — reads `.cursorrules` and `AGENTS.md`
-- **GitHub Copilot** — reads `AGENTS.md`
-- **Claude Code** — reads `CLAUDE.md` and `AGENTS.md`
-- **Cline / Roo** — reads `CLINE.md` and `AGENTS.md`
-
-It covers the complete API: validators, chain order rules, secret masking, schema composition, error handling, CLI commands, custom validators, and anti-patterns. Any AI agent that lands on the repo instantly understands the library.
-
-There's also a deep-dive skill file at `.opencode/skills/ctroenv/SKILL.md` with 3 worked examples and 2 reference documents.
+There's also a skill file at `.opencode/skills/ctroenv/SKILL.md` with worked examples.
 
 ## What Else Changed
 
 | Package | Version | What |
 |---------|---------|------|
 | `@ctroenv/core` | 1.1.0 | Secret masking, schema composition, EnvMeta API |
-| `@ctroenv/cli` | 1.1.0 | Config-level secrets masking (`secrets.mask` / `secrets.maskWith`) |
-| `@ctroenv/node` | 1.0.2 | README + LICENSE polish |
-| `@ctroenv/vite` | 1.0.2 | README + LICENSE polish |
-| `@ctroenv/nextjs` | 1.0.2 | README + LICENSE polish |
-| `@ctroenv/shared` | 1.0.2 | README + LICENSE polish |
+| `@ctroenv/cli` | 1.1.0 | Config-level secrets masking |
+| `@ctroenv/{node,vite,nextjs,shared}` | 1.0.2 | README + LICENSE polish |
 
-## Migration from v1.0.x
+No breaking changes. Existing schemas keep working.
 
-**Zero breaking changes.** All existing schemas continue to work. The new `.secret()` method is additive. `defineSchema()` and `extendSchema()` are new exports that don't affect existing code.
-
-To upgrade your packages:
-
-```bash
+```
 npm install @ctroenv/core@^1.1.0 @ctroenv/cli@^1.1.0
 ```
 
-## What's Next
+The v1.2.0 roadmap: a `zodToCtroEnv` bridge, branded types (Email, URL), and deeper Next.js RSC integration.
 
-The focus for v1.2.0 is ergonomics: a `zodToCtroEnv` bridge for teams migrating from Zod, environment-aware types (e.g., `Email` / `URL` branded types), and deeper Next.js integration with RSC context propagation.
-
-Until then — keep your secrets secret and your schemas composable.
-
----
-
-*CtroEnv is open source under MIT. Star it on [GitHub](https://github.com/ctrotech-tutor/ctroenv), read the [docs](https://ctroenv.vercel.app), or join the discussion in the issues.*
+Try `string().secret()` and see if it catches anything you'd rather keep quiet.

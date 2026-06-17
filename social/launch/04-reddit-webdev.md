@@ -29,7 +29,7 @@ app.listen(env.PORT) // number — TypeScript knows this
 - ✅ **Framework support** — Node.js, Vite, Next.js adapters ready to go
 - ✅ **Auto-docs** — One command generates ENVIRONMENT.md from your schema
 
-This is MIT licensed and free. Check it out if you're tired of env var headaches.
+What setup are you using now? I'm curious if the CLI workflow (validate + generate + docs) fills a gap that most env tools leave open.
 
 GitHub: https://github.com/ctrotech-tutor/ctroenv
 Docs site: https://ctroenv.vercel.app

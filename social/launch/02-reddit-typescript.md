@@ -50,7 +50,7 @@ ctroenv generate    # Creates .env.example from schema
 ctroenv docs        # Generates ENVIRONMENT.md
 ```
 
-Would love feedback on the API, the error message design, or anything else. The whole thing is MIT on GitHub.
+I'm curious what you think of the approach — especially the `.secret()` masking and the CLI's error output. The type system on `pick()` with fuzzy suggestions was a fun one to get right. What edge cases does your current env setup miss?
 
 GitHub: https://github.com/ctrotech-tutor/ctroenv
 Docs: https://ctroenv.vercel.app
