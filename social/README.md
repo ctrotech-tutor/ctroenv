@@ -29,12 +29,13 @@ social/
 | 2 | `articles/02-ctroenv-deep-dive.md` | ctroenv-deep-dive |
 | 3 | `articles/03-monorepo-env-management.md` | monorepo-env-management |
 | 4 | `articles/04-building-custom-validators.md` | building-custom-validators |
+| 5 | `articles/05-secret-masking-and-schema-composition.md` | secret-masking-and-schema-composition |
 
 ## Image Prompts
 
 | Directory | Content | Files |
 |-----------|---------|-------|
-| `prompts/devto/` | Cover images for each article | 4 |
+| `prompts/devto/` | Cover images for each article | 5 |
 | `prompts/twitter/` | Image per tweet (8-tweet thread) | 8 |
 | `prompts/reddit/` | Thumbnail per subreddit post | 3 |
 | `prompts/instagram/` | 10-slide carousel + style guide | 2 |

@@ -1,10 +1,8 @@
 ---
 title: Building Your Own CtroEnv Validators
-published: false
 description: How CtroEnv validators work internally, the createValidator and applyChain APIs, and how to build and publish custom validators for domain-specific needs.
 tags: typescript, nodejs, tutorial, opensource, javascript
 series: Mastering Environment Variables in TypeScript with CtroEnv
-cover_image: https://ctroenv.vercel.app/og.png
 ---
 
 I needed a validator that checks if a string is a valid IPv6 address. The four built-in validators — `string()`, `number()`, `boolean()`, `pick()` — cover the common cases, but this specific case wasn't there.

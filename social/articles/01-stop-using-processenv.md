@@ -1,10 +1,8 @@
 ---
 title: Stop Using process.env Directly — Here's Why
-published: false
 description: Why raw process.env is dangerous for production apps, and how schema-based validation prevents entire classes of bugs.
 tags: typescript, nodejs, javascript, tutorial, devops
 series: Mastering Environment Variables in TypeScript with CtroEnv
-cover_image: https://ctroenv.vercel.app/og.png
 ---
 
 Last month I pushed a new service to staging. Forgot to add `REDIS_URL` to the env file. The server started fine — no crash, no error — but the first request that tried to hit the cache hung forever. Took me 20 minutes and a `strace` to figure out the connection was silently failing.

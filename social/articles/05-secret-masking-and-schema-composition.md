@@ -1,10 +1,8 @@
 ---
 title: Secrets at Rest, Schemas at Scale — What's New in CtroEnv v1.1.0
-published: false
 description: Two major features landed in CtroEnv v1.1.0 — runtime secret masking that prevents accidental leaks, and schema composition for monorepo-scale env management.
 tags: typescript, nodejs, javascript, tutorial, devops
 series: Mastering Environment Variables in TypeScript with CtroEnv
-cover_image: https://ctroenv.vercel.app/og.png
 ---
 
 I accidentally logged a JWT secret to the console while debugging a test. Twice. The first time I thought "eh, it's just dev." The second time I realized the problem wasn't me — it was that my env tool treated secrets and config the same way. No distinction. No protection. Just a flat bag of strings where a `console.log(env)` dumped everything.

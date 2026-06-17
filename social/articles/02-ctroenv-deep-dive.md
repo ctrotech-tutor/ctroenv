@@ -1,10 +1,8 @@
 ---
 title: Define Once, Trust Everywhere — CtroEnv Deep Dive
-published: false
 description: A complete walkthrough of CtroEnv's validators, chainable methods, framework adapters, error system, and extensibility API.
 tags: typescript, nodejs, tutorial, javascript, webdev
 series: Mastering Environment Variables in TypeScript with CtroEnv
-cover_image: https://ctroenv.vercel.app/og.png
 ---
 
 The core API is just four validator factories. Here's how they work and when to use each one.

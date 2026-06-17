@@ -1,10 +1,8 @@
 ---
 title: Monorepo Environment Management at Scale
-published: false
 description: How to compose environment schemas across workspace packages, validate in CI, and auto-generate documentation — all with CtroEnv.
 tags: typescript, nodejs, monorepo, devops, tutorial
 series: Mastering Environment Variables in TypeScript with CtroEnv
-cover_image: https://ctroenv.vercel.app/og.png
 ---
 
 We run a monorepo with three packages — `shared`, `api`, and `worker`. The API needs `PORT` and `CORS_ORIGIN`. The worker needs `QUEUE_CONCURRENCY` and `JOB_TIMEOUT`. Both need `DATABASE_URL`, `REDIS_URL`, and `JWT_SECRET`.
