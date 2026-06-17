@@ -19,6 +19,13 @@ export function walkSchema(
   for (const key of Object.keys(schema)) {
     const validator = schema[key]
     if (!validator) continue
+    if (typeof validator !== "object" || validator === null || !("metadata" in validator)) {
+      throw new TypeError(
+        `Schema entry "${key}" is not a validator. ` +
+          `Expected a Validator from string()/number()/boolean()/pick(). ` +
+          `If using a Next.js schema ({ server, client }), use @ctroenv/nextjs's defineEnv() instead.`,
+      )
+    }
     const prefixedKey = prefix ? `${prefix}${key}` : key
     const raw = source.get(prefixedKey)
 

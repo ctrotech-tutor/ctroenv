@@ -82,6 +82,17 @@ describe("defineEnv()", () => {
     }
   })
 
+  it("throws clear error for non-validator schema entries", () => {
+    try {
+      defineEnv({ server: { KEY: string() }, client: {} } as never, { source: { KEY: "value" } })
+      expect.unreachable("Should have thrown")
+    } catch (e) {
+      expect(e).toBeInstanceOf(TypeError)
+      expect((e as TypeError).message).toContain("server")
+      expect((e as TypeError).message).toContain("not a validator")
+    }
+  })
+
   describe("secret masking", () => {
     it("masks secret values in the env object", () => {
       const env = defineEnv(
