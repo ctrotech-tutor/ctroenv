@@ -31,10 +31,20 @@ function tryImportMetaEnv(): EnvSource | undefined {
 
 export function detectSource(): EnvSource {
   const fromProcess = tryProcessEnv()
-  if (fromProcess) return fromProcess
-
   const fromImportMeta = tryImportMetaEnv()
+
+  if (fromProcess && fromImportMeta) {
+    return {
+      get(key: string) {
+        const fromMeta = fromImportMeta.get(key)
+        if (fromMeta !== undefined) return fromMeta
+        return fromProcess.get(key)
+      },
+    }
+  }
+
   if (fromImportMeta) return fromImportMeta
+  if (fromProcess) return fromProcess
 
   throw new Error("No environment source detected. Pass `source` explicitly to `defineEnv()`.")
 }

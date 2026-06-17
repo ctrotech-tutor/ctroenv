@@ -1,6 +1,7 @@
 import {
   CtroEnvError,
   defineEnv as coreDefineEnv,
+  detectSource,
   type SchemaDefinition,
   type Validator,
 } from "@ctroenv/core"
@@ -22,7 +23,7 @@ export type InferredNextEnv<T extends NextSchemaDefinition> = {
 
 export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNextEnv<T> {
   const isServer = typeof window === "undefined"
-  const source = { get: (key: string) => process.env[key] }
+  const source = detectSource()
 
   let serverResult: Record<string, unknown>
   let clientResult: Record<string, unknown>
