@@ -1,7 +1,7 @@
 import type { ValidationError } from "./validation-error"
 
 export function hasColors(): boolean {
-  if (process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== "") return false
+  if (process.env.NO_COLOR !== undefined) return false
   if (process.env.CI !== undefined) return false
   if (process.env.TERM === "dumb") return false
   return true
@@ -56,9 +56,6 @@ export function formatErrors(errors: readonly ValidationError[]): string {
     }
     lines.push("")
   }
-
-  lines.push(` ${cyan("→", useColors)} ${dim("Define once. Trust everywhere.", useColors)}`)
-  lines.push("")
 
   return lines.join("\n")
 }

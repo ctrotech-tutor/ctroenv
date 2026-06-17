@@ -12,5 +12,4 @@
 - [ ] Tests pass (`pnpm test`)
 - [ ] Lint passes (`pnpm lint`)
 - [ ] Types pass (`pnpm typecheck`)
-- [ ] I have added a changeset (`pnpm changeset`)
 - [ ] I have updated documentation if needed

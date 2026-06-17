@@ -115,7 +115,7 @@ describe("formatErrors()", () => {
     expect(output).toContain("Did you mean 3000?")
   })
 
-  it("includes 'Define once' footer", () => {
+  it("includes section headers", () => {
     const errors = [
       new ValidationError({
         key: "PORT",
@@ -125,6 +125,7 @@ describe("formatErrors()", () => {
       }),
     ]
     const output = formatErrors(errors)
-    expect(output).toContain("Define once")
+    expect(output).toContain("Invalid")
+    expect(output).toContain("PORT")
   })
 })

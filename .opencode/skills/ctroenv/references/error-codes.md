@@ -28,7 +28,7 @@ class CtroEnvError extends Error {
 | `type_mismatch` | Wrong JavaScript type | `errType(key, received, expected)` | Non-string for string validator, non-number for number, etc. |
 | `invalid_value` | Refinement/regex/pick check failed | `errInvalid(key, value, msg)` | `.url()`, `.email()`, `.min()`, `.port()`, `.positive()`, `.regex()`, pick, etc. |
 | `validation_failed` | Custom `.validate(fn)` returned error | — | `.validate(fn)` returns error result |
-| `coercion_failed` | Could not coerce source value | `errCoerce(key, value, type)` | String "abc" for number validator, boolean coercion, etc. |
+
 
 ## Usage
 

@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/node",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Node.js adapter for CtroEnv — process.env source and .env file loading",
   "type": "module",
   "exports": {
@@ -33,6 +33,14 @@
       "gzip": true
     }
   ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ctrotech-tutor/ctroenv.git",
+    "directory": "packages/node"
+  },
+  "homepage": "https://ctroenv.vercel.app",
+  "bugs": "https://github.com/ctrotech-tutor/ctroenv/issues",
   "engines": {
     "node": ">=18"
   },

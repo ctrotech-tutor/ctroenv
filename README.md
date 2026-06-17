@@ -105,16 +105,19 @@ ctroenv docs
 
 ```typescript
 // Node.js — reads from process.env
-import { fromNode } from "@ctroenv/node"
-const env = fromNode(schema)
+import { loadEnv } from "@ctroenv/node"
+const env = loadEnv({ DATABASE_URL: string().url() })
 
 // Vite — reads from import.meta.env
-import { fromVite } from "@ctroenv/vite"
-const env = fromVite(schema)
+import { viteSource } from "@ctroenv/vite"
+const env = defineEnv({ API_URL: string().url() }, { source: viteSource() })
 
 // Next.js — build-time validation + runtime access
-import { fromNext } from "@ctroenv/nextjs"
-const env = fromNext(schema)
+import { defineEnv } from "@ctroenv/nextjs"
+const env = defineEnv({
+  server: { DATABASE_URL: string().url() },
+  client: { NEXT_PUBLIC_API_URL: string().url() },
+})
 ```
 
 ## Documentation
@@ -159,7 +162,6 @@ This project uses:
 - **Biome** for linting and formatting
 - **Vitest** for testing
 - **tsup** for building
-- **Changesets** for versioning and changelogs
 
 ```bash
 git clone https://github.com/ctrotech-tutor/ctroenv.git

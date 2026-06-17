@@ -50,9 +50,16 @@ describe("boolean()", () => {
     if (result.success) expect(result.value).toBe(false)
   })
 
-  it('rejects "yes"', () => {
+  it('accepts "yes"', () => {
     const result = boolean().parse("yes", { key: "TEST", path: ["TEST"] })
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(true)
+  })
+
+  it('accepts "no"', () => {
+    const result = boolean().parse("no", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(false)
   })
 
   it("rejects arbitrary strings", () => {

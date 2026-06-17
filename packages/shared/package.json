@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/shared",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Shared utilities for CtroEnv — logger, type helpers, and cross-package tooling",
   "type": "module",
   "exports": {
@@ -30,6 +30,14 @@
       "gzip": true
     }
   ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ctrotech-tutor/ctroenv.git",
+    "directory": "packages/shared"
+  },
+  "homepage": "https://ctroenv.vercel.app",
+  "bugs": "https://github.com/ctrotech-tutor/ctroenv/issues",
   "engines": {
     "node": ">=18"
   },

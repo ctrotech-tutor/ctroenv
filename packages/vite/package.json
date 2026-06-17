@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/vite",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Vite adapter for CtroEnv — import.meta.env source and build-time validation plugin",
   "type": "module",
   "exports": {
@@ -36,6 +36,19 @@
   "peerDependencies": {
     "vite": ">=5.0.0"
   },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": false
+    }
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ctrotech-tutor/ctroenv.git",
+    "directory": "packages/vite"
+  },
+  "homepage": "https://ctroenv.vercel.app",
+  "bugs": "https://github.com/ctrotech-tutor/ctroenv/issues",
   "engines": {
     "node": ">=18"
   },

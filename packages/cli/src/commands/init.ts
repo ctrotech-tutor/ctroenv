@@ -36,10 +36,10 @@ export default defineConfig({
 `
 
 const JS_FULL = `// @ts-check
-const { defineConfig } = require("@ctroenv/cli")
+import { defineConfig } from "@ctroenv/cli"
 
 /** @type {import("@ctroenv/cli").CliConfig} */
-module.exports = defineConfig({
+export default defineConfig({
   schema: "./src/env.ts",
   sources: {
     default: ".env",
@@ -57,10 +57,10 @@ module.exports = defineConfig({
 `
 
 const JS_MINIMAL = `// @ts-check
-const { defineConfig } = require("@ctroenv/cli")
+import { defineConfig } from "@ctroenv/cli"
 
 /** @type {import("@ctroenv/cli").CliConfig} */
-module.exports = defineConfig({
+export default defineConfig({
   schema: "./src/env.ts",
 })
 `
@@ -82,7 +82,7 @@ export async function initCommand(options: InitOptions): Promise<number> {
     process.stdout.write(`${hint("Then run: ctroenv validate")}\n`)
     return ExitCode.Success
   } catch (e) {
-    process.stdout.write(`${error(`Could not create ${filename}:`)}\n`)
+    process.stderr.write(`${error(`Could not create ${filename}:`)}\n`)
     console.error(e)
     return ExitCode.ConfigError
   }

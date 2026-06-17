@@ -12,6 +12,10 @@ import type { ResolvedConfig } from "./types"
 import { findSchema, loadSchema, resolveConfig } from "./utils"
 import { error as errorMsg, hint } from "./utils/output"
 
+if (process.env.NO_COLOR === "") {
+  process.env.NO_COLOR = "1"
+}
+
 function getVersion(): string {
   try {
     const url = new URL("../package.json", import.meta.url)
@@ -23,7 +27,7 @@ function getVersion(): string {
 }
 
 async function setupCommand(
-  commandFn: (schema: SchemaDefinition, config: ResolvedConfig) => Promise<number>,
+  commandFn: (schema: SchemaDefinition, config: ResolvedConfig, schemaPath: string) => Promise<number>,
   opts: Record<string, unknown>,
 ): Promise<void> {
   try {
@@ -31,18 +35,18 @@ async function setupCommand(
     const config = resolveConfig(cwd, { schema: opts.schema as string | undefined })
     const schemaPath = findSchema(cwd, config.schema)
     if (!schemaPath) {
-      process.stdout.write(
+      process.stderr.write(
         `${errorMsg("Could not find schema file.")}\n${hint("Create src/env.ts or run: ctroenv init")}\n`,
       )
       process.exit(ExitCode.ConfigError)
     }
-    process.stdout.write(`${hint(`Schema: ${schemaPath}`)}\n`)
+    process.stderr.write(`${hint(`Schema: ${schemaPath}`)}\n`)
 
     const schema = await loadSchema(schemaPath)
-    const exitCode = await commandFn(schema, config)
+    const exitCode = await commandFn(schema, config, schemaPath)
     process.exit(exitCode)
   } catch (e) {
-    process.stdout.write(`${errorMsg("Unexpected error:")}\n`)
+    process.stderr.write(`${errorMsg("Unexpected error:")}\n`)
     console.error(e)
     process.exit(ExitCode.ConfigError)
   }
@@ -53,6 +57,9 @@ const program = new Command()
   .description("Environment variable management toolkit")
   .version(getVersion())
   .option("--no-color", "Disable colored output")
+  .hook("preAction", (thisCommand) => {
+    if (!thisCommand.opts().color) process.env.NO_COLOR = "1"
+  })
 
 program
   .command("init")
@@ -61,7 +68,6 @@ program
   .option("--js", "Generate JavaScript config")
   .option("--minimal", "Generate minimal config")
   .action(async (opts) => {
-    if (!program.opts().color) process.env.NO_COLOR = "1"
     const exitCode = await initCommand({
       format: opts.js ? "js" : "ts",
       minimal: !!opts.minimal,
@@ -78,13 +84,13 @@ program
   .option("--watch", "Watch for changes and re-validate")
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
-    if (!program.opts().color) process.env.NO_COLOR = "1"
-    await setupCommand(async (schema, config) => {
+    await setupCommand(async (schema, config, schemaPath) => {
       return validateCommand({
         schema,
         source: opts.source,
         strict: !!opts.strict,
         watch: !!opts.watch,
+        schemaPath,
         json: opts.json ? "json" : "text",
         secrets: config.secrets,
       })
@@ -97,8 +103,7 @@ program
   .option("--output <path>", "Output file path", ".env.example")
   .option("--no-comments", "Generate minimal output without comments")
   .action(async (opts) => {
-    if (!program.opts().color) process.env.NO_COLOR = "1"
-    await setupCommand(async (schema) => {
+    await setupCommand(async (schema, _config, _schemaPath) => {
       return generateCommand({
         schema,
         output: opts.output,
@@ -106,15 +111,13 @@ program
       })
     }, opts)
   })
-
 program
   .command("check")
   .description("Compare .env against schema")
   .option("--source <path>", "Source env file to check", ".env")
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
-    if (!program.opts().color) process.env.NO_COLOR = "1"
-    await setupCommand(async (schema) => {
+    await setupCommand(async (schema, _config, _schemaPath) => {
       return checkCommand({
         schema,
         source: opts.source,
@@ -122,15 +125,13 @@ program
       })
     }, opts)
   })
-
 program
   .command("docs")
   .description("Generate documentation from schema")
   .option("--output <path>", "Output file path", "ENVIRONMENT.md")
   .option("--format <format>", "Output format: markdown|json", "markdown")
   .action(async (opts) => {
-    if (!program.opts().color) process.env.NO_COLOR = "1"
-    await setupCommand(async (schema) => {
+    await setupCommand(async (schema, _config, _schemaPath) => {
       return docsCommand({
         schema,
         output: opts.output,
@@ -138,5 +139,4 @@ program
       })
     }, opts)
   })
-
 program.parse()

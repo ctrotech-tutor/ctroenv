@@ -51,21 +51,6 @@ export function errInvalid(
   })
 }
 
-export function errCoerce(
-  key: string,
-  value: unknown,
-  targetType: string,
-  opts?: MessageOptions,
-): ValidationError {
-  return new ValidationError({
-    key,
-    message: `Failed to coerce "${String(value)}" to ${targetType}`,
-    code: "coercion_failed",
-    value,
-    suggestion: opts?.suggestion,
-  })
-}
-
 export function errWrap(
   key: string,
   value: unknown,

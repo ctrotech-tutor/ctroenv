@@ -1,6 +1,6 @@
 ---
 name: ctroenv
-version: 1.1.0
+version: 1.1.1
 description: CtroEnv — TypeScript-first environment variable management toolkit
 language: typescript
 ---
@@ -13,12 +13,12 @@ This skill provides deep knowledge of the CtroEnv library for AI agents. Load it
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@ctroenv/core` | 1.1.0 | Schema engine, validators, `defineEnv()`, errors (zero deps) |
-| `@ctroenv/cli` | 1.1.0 | CLI tooling (validate, generate, check, docs, init) |
-| `@ctroenv/node` | 1.0.2 | Node.js adapter (`loadEnv()`, `nodeSource()`) |
-| `@ctroenv/vite` | 1.0.2 | Vite adapter (`viteSource()`, `ctroenvPlugin()`) |
-| `@ctroenv/nextjs` | 1.0.2 | Next.js adapter (server/client split) |
-| `@ctroenv/shared` | 1.0.2 | Internal shared utilities |
+| `@ctroenv/core` | 1.1.1 | Schema engine, validators, `defineEnv()`, errors (zero deps) |
+| `@ctroenv/cli` | 1.1.1 | CLI tooling (validate, generate, check, docs, init) |
+| `@ctroenv/node` | 1.0.3 | Node.js adapter (`loadEnv()`, `nodeSource()`) |
+| `@ctroenv/vite` | 1.0.3 | Vite adapter (`viteSource()`, `ctroenvPlugin()`) |
+| `@ctroenv/nextjs` | 1.0.3 | Next.js adapter (server/client split) |
+| `@ctroenv/shared` | 1.0.3 | Internal shared utilities |
 
 ## Complete API Reference
 
@@ -50,7 +50,6 @@ formatErrors(errors)            // Pretty-print with colors/groups
 errMissing(key, opts?)          // "missing_required"
 errType(key, received, expected) // "type_mismatch"
 errInvalid(key, value, msg)     // "invalid_value"
-errCoerce(key, value, type)     // "coercion_failed"
 errWrap(key, value, msg, code)  // Generic wrapper
 
 // Types (all exported as types)
@@ -227,7 +226,7 @@ export default defineConfig({
 | `type_mismatch` | Wrong type (e.g., string for number) | `errType` |
 | `invalid_value` | Failed refinement (e.g., invalid URL) | `errInvalid` |
 | `validation_failed` | Custom `.validate(fn)` returned error | — |
-| `coercion_failed` | Could not coerce (e.g., NaN for number) | `errCoerce` |
+
 
 ## Custom Validators
 

@@ -11,10 +11,9 @@ export function extendSchema<
   U extends SchemaDefinition,
 >(base: Schema<T>, extension: U): Schema<T & U> {
   const conflicts = Object.keys(base).filter((k) => k in extension)
-  if (conflicts.length > 0 && process.env.NODE_ENV === "development") {
-    console.warn(
-      `[ctroenv] extendSchema: keys overridden in extension — ${conflicts.join(", ")}`,
-    )
+  if (conflicts.length > 0 && typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
+    const warn = typeof console !== "undefined" ? console.warn : undefined
+    warn?.(`[ctroenv] extendSchema: keys overridden in extension — ${conflicts.join(", ")}`)
   }
   return { ...base, ...extension }
 }

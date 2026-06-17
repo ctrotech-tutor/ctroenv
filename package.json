@@ -17,14 +17,10 @@
     "format:fix": "biome format --write .",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "clean": "rimraf packages/core/dist packages/cli/dist packages/shared/dist packages/node/dist packages/vite/dist packages/nextjs/dist",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "changeset publish",
     "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
-    "@changesets/cli": "^2.31.0",
     "@size-limit/file": "^12.1.0",
     "@types/node": "^25.9.2",
     "husky": "^9.1.7",

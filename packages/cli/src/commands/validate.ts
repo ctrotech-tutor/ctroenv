@@ -14,6 +14,7 @@ interface ValidateOptions {
   watch: boolean
   json: Format
   secrets?: { mask: string[]; maskWith: string }
+  schemaPath?: string
 }
 
 function getSource(sourcePath?: string): Record<string, string | undefined> | undefined {
@@ -129,13 +130,13 @@ async function runValidation(
       if (options.json === "json") {
         displayJsonResult(options.schema, {}, e.errors, sourceName, options.secrets)
       } else {
-        process.stdout.write(formatErrors(e.errors))
-        process.stdout.write(`\n${hint("Fix the errors above and re-run.")}\n`)
+        process.stderr.write(formatErrors(e.errors))
+        process.stderr.write(`\n${hint("Fix the errors above and re-run.")}\n`)
       }
       return ExitCode.ValidationError
     }
 
-    process.stdout.write(`${error("Validation failed unexpectedly:")}\n`)
+    process.stderr.write(`${error("Validation failed unexpectedly:")}\n`)
     console.error(e)
     return ExitCode.ConfigError
   }
@@ -145,7 +146,7 @@ export async function validateCommand(options: ValidateOptions): Promise<number>
   const sourceName = options.source ?? "process.env"
 
   if (options.watch) {
-    const paths = [process.cwd()]
+    const paths = [options.schemaPath, ...(options.source ? [options.source] : [])].filter(Boolean) as string[]
     const watcher = watch(paths, {
       ignoreInitial: true,
       awaitWriteFinish: { stabilityThreshold: 300 },

@@ -27,6 +27,8 @@ export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNe
   let serverResult: Record<string, unknown>
   let clientResult: Record<string, unknown>
 
+  const serverKeys = Object.keys(schema.server)
+
   if (isServer) {
     serverResult = coreDefineEnv(schema.server, { source })
     clientResult = coreDefineEnv(schema.client, { source })
@@ -35,23 +37,29 @@ export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNe
     clientResult = coreDefineEnv(schema.client, { source })
   }
 
-  return createEnvProxy<T>(serverResult, clientResult, isServer)
+  return createEnvProxy<T>(serverKeys, serverResult, clientResult, isServer)
 }
 
 function createEnvProxy<T extends NextSchemaDefinition>(
+  serverKeys: string[],
   server: Record<string, unknown>,
   client: Record<string, unknown>,
   isServer: boolean,
 ): InferredNextEnv<T> {
+  const serverKeySet = new Set(serverKeys)
   const combined = { ...server, ...client }
   return new Proxy({} as InferredNextEnv<T>, {
     get(_, key: string) {
-      if (key in server) {
+      if (serverKeySet.has(key)) {
         if (!isServer) {
           throw new Error(
             `Server-only environment variable "${key}" is not accessible on the client. ` +
               "Prefix it with NEXT_PUBLIC_ to expose it to the client bundle.",
           )
+        }
+        const srv = server as Record<string, unknown> & { meta?: { get(k: string): unknown } }
+        if (srv.meta && typeof srv.meta.get === "function") {
+          return srv.meta.get(key)
         }
         return server[key as keyof typeof server]
       }
@@ -91,7 +99,7 @@ export function withCtroEnv<T extends NextSchemaDefinition>(
             console.error(e.errors.map((err) => `  ✗ ${err.key}: ${err.message}`).join("\n"))
           }
           console.error("✗ CtroEnv: Environment validation failed")
-          process.exit(1)
+          throw e
         }
       }
       if (typeof nextConfig.webpack === "function") {

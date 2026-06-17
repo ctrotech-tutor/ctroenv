@@ -71,7 +71,7 @@ export async function docsCommand(options: DocsOptions): Promise<number> {
     process.stdout.write(`${success(`Generated ${options.output}`)}\n`)
     return ExitCode.Success
   } catch (e) {
-    process.stdout.write(`${error(`Could not write ${options.output}:`)}\n`)
+    process.stderr.write(`${error(`Could not write ${options.output}:`)}\n`)
     console.error(e)
     return ExitCode.ConfigError
   }

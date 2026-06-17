@@ -43,7 +43,8 @@ describe("defineEnv()", () => {
 
   it("freezes the returned object", () => {
     const env = defineEnv({ KEY: string() }, { source: { KEY: "value" } })
-    expect(Object.isFrozen(env)).toBe(true)
+    expect(() => { (env as Record<string, unknown>).KEY = "new" }).toThrow(TypeError)
+    expect(() => { delete (env as Record<string, unknown>).KEY }).toThrow(TypeError)
   })
 
   it("strips prefix when configured", () => {

@@ -38,8 +38,7 @@ ctroenv/
 2. Make your changes
 3. Add or update tests
 4. Run `npm run lint && npm run typecheck && npm test`
-5. Add a changeset with `npm run changeset`
-6. Submit a pull request
+5. Submit a pull request
 
 ## Commit Convention
 

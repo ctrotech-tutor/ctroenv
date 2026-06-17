@@ -98,7 +98,7 @@ catch (e) {
 }
 ```
 
-**Error codes:** `missing_required`, `type_mismatch`, `invalid_value`, `validation_failed`, `coercion_failed`
+**Error codes:** `missing_required`, `type_mismatch`, `invalid_value`, `validation_failed`
 
 ### Framework Adapters
 

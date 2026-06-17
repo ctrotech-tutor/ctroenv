@@ -1,5 +1,5 @@
 export { CtroEnvError } from "./ctroenv-error"
 export { ErrorCode } from "./error-codes"
 export { formatErrors } from "./formatter"
-export { errCoerce, errInvalid, errMissing, errType, errWrap } from "./messages"
+export { errInvalid, errMissing, errType, errWrap } from "./messages"
 export { ValidationError } from "./validation-error"

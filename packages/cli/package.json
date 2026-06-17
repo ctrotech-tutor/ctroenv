@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CLI tooling for CtroEnv — validate, generate, check, and document environment variables",
   "type": "module",
   "exports": {
@@ -53,6 +53,14 @@
     "picocolors": "^1.1",
     "chokidar": "^4.0"
   },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ctrotech-tutor/ctroenv.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://ctroenv.vercel.app",
+  "bugs": "https://github.com/ctrotech-tutor/ctroenv/issues",
   "engines": {
     "node": ">=18"
   },

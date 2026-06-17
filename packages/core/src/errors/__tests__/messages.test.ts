@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { errCoerce, errInvalid, errMissing, errType, errWrap } from "../messages"
+import { errInvalid, errMissing, errType, errWrap } from "../messages"
 
 describe("errMissing", () => {
   it("creates a missing_required error with suggestion", () => {
@@ -39,16 +39,6 @@ describe("errInvalid", () => {
     expect(err.code).toBe("invalid_value")
     expect(err.message).toBe("Invalid port number")
     expect(err.suggestion).toContain("65535")
-  })
-})
-
-describe("errCoerce", () => {
-  it("creates a coercion_failed error", () => {
-    const err = errCoerce("PORT", "abc", "number")
-    expect(err.key).toBe("PORT")
-    expect(err.code).toBe("coercion_failed")
-    expect(err.message).toContain("abc")
-    expect(err.message).toContain("number")
   })
 })
 

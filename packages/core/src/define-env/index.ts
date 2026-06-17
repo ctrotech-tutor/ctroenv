@@ -32,10 +32,6 @@ export function defineEnv<T extends SchemaDefinition>(
       .map(([k]) => k),
   )
 
-  if (secretKeys.size === 0) {
-    return deepFreeze(value) as unknown as EnvResult<T>
-  }
-
   return createMaskedEnv(value, secretKeys) as unknown as EnvResult<T>
 }
 
@@ -106,13 +102,4 @@ function isRecordSource(
   source: EnvSource | Record<string, string | undefined>,
 ): source is Record<string, string | undefined> {
   return !("get" in source)
-}
-
-function deepFreeze<T extends Record<string, unknown>>(obj: T): Readonly<T> {
-  for (const value of Object.values(obj)) {
-    if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
-      deepFreeze(value as Record<string, unknown>)
-    }
-  }
-  return Object.freeze(obj)
 }
