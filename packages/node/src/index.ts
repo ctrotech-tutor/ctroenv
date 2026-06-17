@@ -21,6 +21,7 @@ export function nodeSource(): EnvSource {
 
 export function parseEnvFile(content: string): Record<string, string> {
   const result: Record<string, string> = {}
+  content = content.replace(/\r\n/g, "\n").replace(/^\uFEFF/, "")
   const lines = content.split("\n")
   let continuation = ""
 
@@ -75,20 +76,25 @@ function isQuoted(value: string): boolean {
   )
 }
 
+function stripQuotes(value: string): string {
+  return value.slice(1, -1).replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\n/g, "\n")
+}
+
 function parseEnvValue(value: string): string {
   value = value.trim()
 
   if (isQuoted(value)) {
-    value = value.slice(1, -1)
-    value = value.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\n/g, "\n")
-    return value
+    return stripQuotes(value)
   }
 
   const hashIndex = value.indexOf("#")
   if (hashIndex !== -1) {
     const before = value.slice(0, hashIndex).trimEnd()
     const after = value.slice(hashIndex + 1)
-    if (after.trim() !== "" && !isQuoted(before)) {
+    if (after.trim() !== "") {
+      if (isQuoted(before)) {
+        return stripQuotes(before)
+      }
       value = before
     }
   }

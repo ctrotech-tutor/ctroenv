@@ -62,6 +62,7 @@ Parses a raw `.env` file string. Supports:
 - Multiline values with trailing `\`
 - Variable interpolation: `KEY=$OTHER` and `KEY=${OTHER}`
 - Escaped quotes: `KEY=it's` or `KEY=val\"ue`
+- `$$` escaping for literal dollar signs
 
 ## Documentation
 

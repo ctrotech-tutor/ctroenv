@@ -38,7 +38,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx vitest run
+      - run: npx vitest run --coverage
 
   build:
     runs-on: ubuntu-latest
