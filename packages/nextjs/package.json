@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/nextjs",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Next.js adapter for CtroEnv — client/server split, build-time validation, and type safety",
   "type": "module",
   "exports": {
