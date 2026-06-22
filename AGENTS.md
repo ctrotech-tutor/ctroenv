@@ -80,6 +80,21 @@ const env = defineEnv(schema)
 
 `extendSchema` merges with spread; extension keys override base. Dev-mode warns on conflicts.
 
+### Client/Server Schema
+
+```ts
+import { type ClientServerSchema, type InferredClientServerEnv } from "@ctroenv/core"
+
+type Schema = ClientServerSchema
+// { client: SchemaDefinition, server: SchemaDefinition }
+
+// Inferred type merges both:
+type Env = InferredClientServerEnv<Schema>
+// { DATABASE_URL: string; NEXT_PUBLIC_API_URL: string; ... }
+```
+
+Used by framework adapters (Next.js, Vite). Adapters own visibility logic — core defines the shape.
+
 ### Error Handling
 
 ```ts

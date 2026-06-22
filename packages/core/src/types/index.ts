@@ -1,6 +1,6 @@
 export type { EnvMeta, EnvResult } from "./env-meta"
-export type { InferredEnv } from "./infer"
-export type { SchemaDefinition } from "./schema"
+export type { InferredClientServerEnv, InferredEnv } from "./infer"
+export type { ClientServerSchema, SchemaDefinition } from "./schema"
 export {
   type ParseContext,
   type ParseResult,
