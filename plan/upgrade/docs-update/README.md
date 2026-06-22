@@ -1,6 +1,6 @@
 # Documentation Site Update Plan
 
-**Reference:** Phase 1 changes (branch `phase/01-bug-fixes`, commit `6067cf1`)
+**Reference:** Phase 1 (`phase/01-bug-fixes`, `6067cf1`) + Phase 2 (`phase/02-client-server`, `4c88db0`)
 **Target docs:** `apps/docs/content/docs/` (MDX files)
 **Also affected:** `.opencode/skills/ctroenv/SKILL.md` (agent guide)
 
@@ -18,7 +18,10 @@
 | 6 | `.default(v)` validates in dev mode | `docs/core/chainable.mdx` — add dev-mode validation paragraph to `.default()` section |
 | 7 | `structuredClone(env)` documented limitation | `docs/core/define-env.mdx` — add "Known Limitations" section |
 | 8 | Next.js proxy secret masking fix | `docs/nextjs.mdx` — add `meta.get()` access pattern for secrets |
-| — | Agent guide stale | `.opencode/skills/ctroenv/SKILL.md` — sync with Phase 1 changes |
+| 9 | `ClientServerSchema` type in core | `docs/core/schema-composition.mdx` — add client/server schema section |
+| 10 | `InferredClientServerEnv` type | `docs/core/schema-composition.mdx` — mention alongside `ClientServerSchema` |
+| 11 | `NextSchemaDefinition` deprecated | `docs/nextjs.mdx` — update imports, show `ClientServerSchema` from core |
+| — | Agent guide stale | `.opencode/skills/ctroenv/SKILL.md` — sync with Phase 1 + Phase 2 changes |
 | — | `AGENTS.md` stale | `AGENTS.md` — already updated inline; verify |
 
 ---
@@ -128,12 +131,58 @@ The README is a high-level overview and doesn't document specific validator beha
 - Feature comparison table still accurate
 - Any mention of CLI behavior still matches current code
 
-### 10. (Optional) New Blog Post — v1.3.0
+### 10. `docs/core/schema-composition.mdx` — Client/Server Schema Types
 
-If desired, create `content/blog/v1-3-0.mdx` announcing the release with:
-- Phase 1 fixes summary
-- Security improvement (Next.js proxy masking)
-- Migration notes (no breaking changes, just stricter validation)
+**Location:** Add after monorepo pattern section (around line 60)
+
+Add a new section:
+
+> ### Client/Server Schema
+>
+> For framework adapters that split environment variables into client and server groups (Next.js, Vite), CtroEnv provides shared types:
+>
+> ```ts
+> import { type ClientServerSchema, type InferredClientServerEnv } from "@ctroenv/core"
+>
+> type Schema = ClientServerSchema
+> // { client: SchemaDefinition, server: SchemaDefinition }
+>
+> type Env = InferredClientServerEnv<Schema>
+> // Merged type: { DATABASE_URL: string; NEXT_PUBLIC_API_URL: string }
+> ```
+>
+> These types are used by framework adapters to define client/server boundaries. The adapters own visibility logic — core defines the shape.
+
+### 11. `docs/nextjs.mdx` — Update Imports for Core Types
+
+**Location:** Lines 21-34 (schema definition code blocks)
+
+Update imports to show the new `ClientServerSchema` from core:
+
+```ts
+import { string, number, type ClientServerSchema } from "@ctroenv/core"
+import { defineEnv } from "@ctroenv/nextjs"
+
+const schema = {
+  server: { ... },
+  client: { ... },
+} satisfies ClientServerSchema
+```
+
+Note that `NextSchemaDefinition` still works but is deprecated — import from `@ctroenv/core` for new code.
+
+Also update the Type Inference section (line 102) to reference `ClientServerSchema` instead of `NextSchemaDefinition`.
+
+### 12. `.opencode/skills/ctroenv/SKILL.md` — Sync Phase 2
+
+Add `ClientServerSchema` and `InferredClientServerEnv` to the core API reference section.
+
+### 13. (Optional) New Blog Post — v1.4.0
+
+If desired, create `content/blog/v1-4-0.mdx` covering:
+- `ClientServerSchema` promoted to core
+- `NextSchemaDefinition` deprecated
+- Architectural improvements (adapter ownership, deferred Vite mode)
 
 ---
 
@@ -147,11 +196,13 @@ If desired, create `content/blog/v1-3-0.mdx` announcing the release with:
 | `docs/core/refinements.mdx` | Edit (2 notes) | 5 min |
 | `docs/core/chainable.mdx` | Edit (paragraph add) | 5 min |
 | `docs/core/define-env.mdx` | Edit (new section) | 10 min |
-| `docs/nextjs.mdx` | Edit (new subsection) | 10 min |
-| `SKILL.md` | Review + edit | 10 min |
+| `docs/core/schema-composition.mdx` | Edit (new section) | 10 min |
+| `docs/nextjs.mdx` | Edit (imports + type references) | 15 min |
+| `SKILL.md` | Review + edit | 15 min |
 | `README.md` | Review (likely no changes) | 5 min |
 | New blog post v1.3.0 | Write new MDX | 30 min |
-| **Total** | | **~1.5 hours** |
+| New blog post v1.4.0 | Write new MDX | 20 min |
+| **Total** | | **~2.5 hours** |
 
 ---
 
