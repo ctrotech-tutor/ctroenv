@@ -8,7 +8,7 @@
 
 ## 2.1 Core: Client/Server Schema Type
 
-Add a new exported type `ClientServerSchema` and `defineEnv` overload in core:
+Promote `NextSchemaDefinition` (currently in `@ctroenv/nextjs`) to `@ctroenv/core` as `ClientServerSchema`:
 
 ```ts
 export type ClientServerSchema = {
@@ -17,57 +17,41 @@ export type ClientServerSchema = {
 }
 ```
 
-This lives in `packages/core/src/types/schema.ts` or a new file.
-
----
-
-## 2.2 Core: Source Abstraction for Client vs Server
-
-Add a `mode` option to `DefineEnvOptions`:
-
-```ts
-export interface DefineEnvOptions {
-  source?: EnvSource | Record<string, string | undefined>
-  prefix?: string
-  mode?: "server" | "client"  // NEW
-}
-```
-
-When `mode: "client"`, the returned `EnvResult` should have server-only vars set to `undefined` at runtime (they can't exist in the browser).
-
-When `mode: "server"`, all vars are validated as usual.
-
----
-
-## 2.3 Next.js: Use Client/Server Split Properly
-
-Currently `@ctroenv/nextjs` validates both schemas on server and only `client` on client. But the proxy still allows accessing server values through `meta`. 
-
-Rewrite `defineEnv` in nextjs adapter to:
-
-1. Accept `{ server: {...}, client: {...} }` (already does)
-2. On server: validate both, return combined with server vars masked behind `meta`
-3. On client: validate only client vars, throw on server var access (already does)
-4. Ensure `JSON.stringify(env)` on server doesn't leak secrets (non-enumerable `meta`)
+Re-export from `@ctroenv/nextjs` for backward compat. Update Next.js adapter to import from core.
 
 **Files:**
-- `packages/nextjs/src/index.ts` — rewrite `createEnvProxy`
+- `packages/core/src/types/index.ts` — add `ClientServerSchema`
+- `packages/core/src/index.ts` — export it
+- `packages/nextjs/src/index.ts` — import from core, re-export as `NextSchemaDefinition`
 
 ---
 
-## 2.4 Vite: Client/Server Split
+## 2.2 ~~Core: Source Abstraction for Client vs Server~~ DROPPED
 
-Add a `mode` option to `CtroEnvPluginOptions` so the Vite plugin can be configured:
+**Why dropped:** The existing Next.js proxy already handles mode correctly — it **throws** on illegal client access (`nextjs/src/index.ts:76-81`). Returning `undefined` (as originally proposed) is a regression; falsy checks silently lie. Adding `mode` to core's `DefineEnvOptions` also conflates framework concepts into a zero-dep core package.
 
-```ts
-ctroenvPlugin({
-  schema: "./src/env.ts",
-  mode: "client"  // only validates client vars in browser build
-})
-```
+Adapters own visibility logic. Core stays framework-agnostic.
+
+---
+
+## 2.3 Next.js: Proxy Cleanup & Hardening
+
+Phase 1 (1.8) already fixed the secret masking bypass. Remaining work:
+
+1. **`Object.freeze(meta)`** — prevent mutation of the meta object at runtime
+2. **Ensure meta passthrough is clean** — verify server meta and client meta merge correctly when both exist
+3. **Verify `JSON.stringify(env)` doesn't leak** — meta is already non-enumerable (Phase 1)
 
 **Files:**
-- `packages/vite/src/index.ts` — add `mode` option to plugin
+- `packages/nextjs/src/index.ts` — minor cleanup in `createEnvProxy`
+
+---
+
+## 2.4 Vite: Client/Server Split — DEFERRED
+
+**Why deferred:** The Vite plugin only validates at **build time** (server-side context). There's no runtime proxy in Vite like Next.js has. Adding a `mode` option now creates an option with no clear runtime behavior. The Vite client/server story needs more design — specifically around how `defineEnv(clientSchema)` would work in browser bundles vs SSR.
+
+For now, `ctroenvPlugin` validates the full schema at build time. If a schema uses `ClientServerSchema`, the plugin should validate both client and server schemas (both are available at build time).
 
 ---
 

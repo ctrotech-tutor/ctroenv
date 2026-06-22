@@ -1,25 +1,19 @@
 import {
+  type ClientServerSchema,
   CtroEnvError,
   defineEnv as coreDefineEnv,
   detectSource,
-  type SchemaDefinition,
-  type Validator,
+  type InferredClientServerEnv,
 } from "@ctroenv/core"
 
 import type { NextConfig } from "next"
 
 declare const window: unknown
 
-export interface NextSchemaDefinition {
-  server: SchemaDefinition
-  client: SchemaDefinition
-}
+/** @deprecated Use `ClientServerSchema` from @ctroenv/core */
+export type NextSchemaDefinition = ClientServerSchema
 
-export type InferredNextEnv<T extends NextSchemaDefinition> = {
-  [K in keyof T["server"]]: T["server"][K] extends Validator<infer V> ? V : never
-} & {
-  [K in keyof T["client"]]: T["client"][K] extends Validator<infer V> ? V : never
-}
+export type InferredNextEnv<T extends NextSchemaDefinition> = InferredClientServerEnv<T>
 
 export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNextEnv<T> {
   const isServer = typeof window === "undefined"
@@ -68,6 +62,7 @@ function createEnvProxy<T extends NextSchemaDefinition>(
   }
 
   const meta = getMeta()
+  if (meta) Object.freeze(meta)
 
   return new Proxy({} as InferredNextEnv<T>, {
     get(_, key: string) {

@@ -7,8 +7,10 @@ export { CtroEnvError, ErrorCode, formatErrors, ValidationError } from "./errors
 export type { Schema } from "./schema-composition"
 export { defineSchema, extendSchema } from "./schema-composition"
 export type {
+  ClientServerSchema,
   EnvMeta,
   EnvResult,
+  InferredClientServerEnv,
   InferredEnv,
   ParseContext,
   ParseResult,

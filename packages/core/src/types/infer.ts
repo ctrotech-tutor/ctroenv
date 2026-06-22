@@ -1,3 +1,4 @@
+import type { ClientServerSchema } from "./schema"
 import type { Validator } from "./validator"
 
 type InferredValue<V extends Validator<unknown>> =
@@ -11,4 +12,10 @@ type InferredValue<V extends Validator<unknown>> =
 
 export type InferredEnv<S extends Record<string, Validator<unknown>>> = {
   readonly [K in keyof S]: InferredValue<S[K]>
+}
+
+export type InferredClientServerEnv<S extends ClientServerSchema> = {
+  readonly [K in keyof S["server"]]: S["server"][K] extends Validator<infer V> ? V : never
+} & {
+  readonly [K in keyof S["client"]]: S["client"][K] extends Validator<infer V> ? V : never
 }
