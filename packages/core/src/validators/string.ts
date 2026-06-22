@@ -63,7 +63,8 @@ export function string(): StringValidator {
   base.url = () =>
     refine((v) => {
       try {
-        new URL(v)
+        const parsed = new URL(v)
+        if (!parsed.protocol || parsed.protocol === "file:") return "Invalid URL"
         return undefined
       } catch {
         return "Invalid URL"
@@ -72,7 +73,8 @@ export function string(): StringValidator {
 
   base.email = () =>
     refine((v) => {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const re =
+        /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
       return re.test(v) ? undefined : "Invalid email address"
     })
 

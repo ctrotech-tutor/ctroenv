@@ -4,7 +4,8 @@ import type { ParseContext } from "../../types/validator"
 import { singleError } from "../../types/validator"
 import { createValidator } from "../factory"
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_RE =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
 export function email(): <T extends string>(v: Validator<T>) => Validator<T> {
   return <T extends string>(validator: Validator<T>): Validator<T> => {

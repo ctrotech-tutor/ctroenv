@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { string } from "../string"
 
 describe("chainable methods", () => {
@@ -49,6 +49,48 @@ describe("chainable methods", () => {
     it("marks as secret", () => {
       const v = string().secret()
       expect(v.metadata.isSecret).toBe(true)
+    })
+  })
+
+  describe(".default() with validation", () => {
+    it("warns in dev mode when default fails refinements", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const prev = process.env.NODE_ENV
+      process.env.NODE_ENV = "development"
+
+      string().url().default("not-a-url")
+
+      expect(warn).toHaveBeenCalledOnce()
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("[ctroenv] Default value"))
+
+      warn.mockRestore()
+      process.env.NODE_ENV = prev
+    })
+
+    it("does not warn when default passes refinements", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const prev = process.env.NODE_ENV
+      process.env.NODE_ENV = "development"
+
+      string().url().default("https://valid.com")
+
+      expect(warn).not.toHaveBeenCalled()
+
+      warn.mockRestore()
+      process.env.NODE_ENV = prev
+    })
+
+    it("does not warn in production", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const prev = process.env.NODE_ENV
+      process.env.NODE_ENV = "production"
+
+      string().url().default("not-a-url")
+
+      expect(warn).not.toHaveBeenCalled()
+
+      warn.mockRestore()
+      process.env.NODE_ENV = prev
     })
   })
 

@@ -22,8 +22,23 @@ describe("defineEnv (Next.js)", () => {
   it("returns validated env on server", () => {
     const env = defineEnv(schema)
     expect(env.DATABASE_URL).toBe("postgres://localhost:5432/db")
-    expect(env.JWT_SECRET).toBe("super-secret")
     expect(env.NEXT_PUBLIC_API_URL).toBe("https://api.example.com")
+  })
+
+  it("masks secret values on server", () => {
+    const env = defineEnv(schema)
+    expect(env.JWT_SECRET).toBe("********")
+  })
+
+  it("exposes raw secret values via env.meta.get()", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.get("JWT_SECRET")).toBe("super-secret")
+  })
+
+  it("env.meta.has() works correctly", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.has("DATABASE_URL")).toBe(true)
+    expect(env.meta.has("NONEXISTENT")).toBe(false)
   })
 
   it("allows access to client vars from any environment", () => {

@@ -21,15 +21,17 @@ export function number(): NumberValidator {
         if (typeof input === "number") {
           value = input
         } else if (typeof input === "string") {
-          value = Number(input)
-          if (input.trim() === "" || Number.isNaN(value)) {
+          const trimmed = input.trim()
+          if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
             return singleError(
               errType(context.key, `"${input}"`, "a number", {
-                suggestion: "Ensure the value is a numeric string or number.",
+                suggestion:
+                  "Use a plain number like '3000' or '3.14'. Hex (0xFF), scientific (1e2), and empty strings are not accepted.",
                 originalValue: input,
               }),
             )
           }
+          value = Number(trimmed)
         } else {
           return singleError(
             errType(context.key, typeof input, "a number", { originalValue: input }),
