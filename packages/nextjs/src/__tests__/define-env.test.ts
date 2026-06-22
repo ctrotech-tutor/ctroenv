@@ -55,4 +55,18 @@ describe("defineEnv (Next.js)", () => {
     delete process.env.NEXT_PUBLIC_API_URL
     expect(() => defineEnv(schema)).toThrow()
   })
+
+  it("JSON.stringify does not leak secret values", () => {
+    const env = defineEnv(schema)
+    const serialized = JSON.stringify(env)
+    expect(serialized).not.toContain("super-secret")
+    expect(serialized).toContain("********")
+    expect(serialized).toContain("postgres://localhost:5432/db")
+  })
+
+  it("meta is non-enumerable and not visible in Object.keys", () => {
+    const env = defineEnv(schema)
+    expect(Object.keys(env)).not.toContain("meta")
+    expect(env.meta).toBeDefined()
+  })
 })
