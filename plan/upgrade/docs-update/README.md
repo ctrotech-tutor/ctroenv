@@ -21,7 +21,10 @@
 | 9 | `ClientServerSchema` type in core | `docs/core/schema-composition.mdx` — add client/server schema section |
 | 10 | `InferredClientServerEnv` type | `docs/core/schema-composition.mdx` — mention alongside `ClientServerSchema` |
 | 11 | `NextSchemaDefinition` deprecated | `docs/nextjs.mdx` — update imports, show `ClientServerSchema` from core |
-| — | Agent guide stale | `.opencode/skills/ctroenv/SKILL.md` — sync with Phase 1 + Phase 2 changes |
+| 12 | Deno/Bun auto-detection in core | `docs/core/define-env.mdx` — update source detection section |
+| 13 | `workersSource()` adapter for CF Workers | `docs/core/define-env.mdx` — add workersSource section |
+| 14 | Native env-file opt-in (`loadEnv({ native: true })`) | `docs/node.mdx` — add native option docs |
+| — | Agent guide stale | `.opencode/skills/ctroenv/SKILL.md` — sync with Phase 1 + Phase 2 + Phase 3 changes |
 | — | `AGENTS.md` stale | `AGENTS.md` — already updated inline; verify |
 
 ---
@@ -184,6 +187,50 @@ If desired, create `content/blog/v1-4-0.mdx` covering:
 - `NextSchemaDefinition` deprecated
 - Architectural improvements (adapter ownership, deferred Vite mode)
 
+### 14. `docs/core/define-env.mdx` — Deno/Bun Detection & workersSource
+
+**Location:** After existing Source section (around line 60)
+
+Add a subsection to the `source` parameter docs:
+
+> #### Auto-detected runtimes
+>
+> `detectSource()` automatically probes for the current runtime in this order:
+> 1. `import.meta.env` (Vite/build-time)
+> 2. `Deno.env.get()` (Deno)
+> 3. `Bun.env` (Bun — alias of process.env)
+> 4. `process.env` (Node.js, Bun, CF Workers)
+>
+> #### workersSource
+>
+> For Cloudflare Workers, pass the `env` binding directly:
+>
+> ```ts
+> import { defineEnv, workersSource } from "@ctroenv/core"
+>
+> export default {
+>   async fetch(request: Request, env: Record<string, string | undefined>) {
+>     const validated = defineEnv(schema, { source: workersSource(env) })
+>   }
+> }
+> ```
+
+### 15. `docs/node.mdx` — Native env-file option
+
+**Location:** In the `loadEnv()` API section
+
+Add a note about the `native` option:
+
+> `loadEnv({ native: true })` — uses Node 22+'s built-in `process.loadEnvFile()` instead of the custom parser. The custom parser supports variable interpolation and `export KEY=val` syntax; the native parser does not. Opt-in explicitly.
+
+### 16. (Optional) New Blog Post — v1.5.0
+
+If desired, create `content/blog/v1-5-0.mdx` covering:
+- Deno and Bun auto-detection
+- Cloudflare Workers adapter (`workersSource`)
+- Native .env file support (opt-in)
+- Architectural decisions (dropped auto-native, workers naming)
+
 ---
 
 ## Effort Estimate
@@ -195,14 +242,16 @@ If desired, create `content/blog/v1-4-0.mdx` covering:
 | `docs/core/number.mdx` | Edit (table rows + paragraph) | 10 min |
 | `docs/core/refinements.mdx` | Edit (2 notes) | 5 min |
 | `docs/core/chainable.mdx` | Edit (paragraph add) | 5 min |
-| `docs/core/define-env.mdx` | Edit (new section) | 10 min |
+| `docs/core/define-env.mdx` | Edit (2 new sections) | 15 min |
 | `docs/core/schema-composition.mdx` | Edit (new section) | 10 min |
+| `docs/node.mdx` | Edit (native option note) | 5 min |
 | `docs/nextjs.mdx` | Edit (imports + type references) | 15 min |
 | `SKILL.md` | Review + edit | 15 min |
 | `README.md` | Review (likely no changes) | 5 min |
 | New blog post v1.3.0 | Write new MDX | 30 min |
 | New blog post v1.4.0 | Write new MDX | 20 min |
-| **Total** | | **~2.5 hours** |
+| New blog post v1.5.0 | Write new MDX | 20 min |
+| **Total** | | **~3 hours** |
 
 ---
 
