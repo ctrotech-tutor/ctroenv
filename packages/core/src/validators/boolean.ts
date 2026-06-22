@@ -16,9 +16,23 @@ export function boolean(): BooleanValidator {
         }
         if (typeof input === "string") {
           const lower = input.trim().toLowerCase()
-          if (lower === "true" || lower === "1" || lower === "yes" || lower === "on")
+          if (
+            lower === "true" ||
+            lower === "1" ||
+            lower === "yes" ||
+            lower === "on" ||
+            lower === "y" ||
+            lower === "t"
+          )
             return parseOk(true)
-          if (lower === "false" || lower === "0" || lower === "no" || lower === "off")
+          if (
+            lower === "false" ||
+            lower === "0" ||
+            lower === "no" ||
+            lower === "off" ||
+            lower === "n" ||
+            lower === "f"
+          )
             return parseOk(false)
         }
         if (typeof input === "number") {
@@ -31,7 +45,7 @@ export function boolean(): BooleanValidator {
             typeof input === "string" ? `"${input}"` : typeof input,
             "a boolean",
             {
-              suggestion: "Use 'true', 'false', 'yes', 'no', '1', or '0'.",
+              suggestion: "Use 'true', 'false', 'yes', 'no', '1', '0', 'y', or 'n'.",
               originalValue: input,
             },
           ),

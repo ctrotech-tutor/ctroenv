@@ -19,6 +19,21 @@ describe("number()", () => {
     expect(result.success).toBe(false)
   })
 
+  it("rejects hex notation", () => {
+    const result = number().parse("0xFF", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects scientific notation", () => {
+    const result = number().parse("1e2", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects whitespace-only strings", () => {
+    const result = number().parse("   ", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
+
   it("rejects NaN", () => {
     const result = number().parse(NaN, { key: "TEST", path: ["TEST"] })
     expect(result.success).toBe(false)

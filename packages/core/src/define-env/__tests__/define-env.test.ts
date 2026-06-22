@@ -184,5 +184,16 @@ describe("defineEnv()", () => {
         ;(env as Record<string, unknown>).NEW = "x"
       }).toThrow()
     })
+
+    it("JSON.stringify works for serialization (structuredClone is not supported on Proxy)", () => {
+      const env = defineEnv(
+        { PUBLIC: string(), SECRET: string().secret() },
+        { source: { PUBLIC: "hello", SECRET: "hidden" } },
+      )
+      const json = JSON.parse(JSON.stringify(env))
+      expect(json.PUBLIC).toBe("hello")
+      expect(json.SECRET).toBe("********")
+      expect(json.meta).toBeUndefined()
+    })
   })
 })

@@ -62,6 +62,39 @@ describe("boolean()", () => {
     if (result.success) expect(result.value).toBe(false)
   })
 
+  it('accepts "y" shorthand', () => {
+    const result = boolean().parse("y", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(true)
+  })
+
+  it('accepts "n" shorthand', () => {
+    const result = boolean().parse("n", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(false)
+  })
+
+  it('accepts "t" shorthand', () => {
+    const result = boolean().parse("t", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(true)
+  })
+
+  it('accepts "f" shorthand', () => {
+    const result = boolean().parse("f", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.value).toBe(false)
+  })
+
+  it("accepts case-insensitive variants", () => {
+    expect(boolean().parse("TRUE", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+    expect(boolean().parse("True", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+    expect(boolean().parse("YES", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+    expect(boolean().parse("No", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+    expect(boolean().parse("Y", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+    expect(boolean().parse("N", { key: "TEST", path: ["TEST"] }).success).toBe(true)
+  })
+
   it("rejects arbitrary strings", () => {
     const result = boolean().parse("maybe", { key: "TEST", path: ["TEST"] })
     expect(result.success).toBe(false)

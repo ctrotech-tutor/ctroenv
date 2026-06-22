@@ -36,6 +36,18 @@ describe("string()", () => {
       const result = s.parse("not-a-url", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
+
+    it("rejects URL without protocol", () => {
+      const s = string().url()
+      const result = s.parse("example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects file protocol", () => {
+      const s = string().url()
+      const result = s.parse("file:///etc/passwd", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 
   describe(".email()", () => {

@@ -10,7 +10,17 @@ export function url(): <T extends string>(v: Validator<T>) => Validator<T> {
       const result = validator.parse(input, context)
       if (!result.success) return result
       try {
-        new URL(result.value as string)
+        const parsed = new URL(result.value as string)
+        if (!parsed.protocol || parsed.protocol === "file:") {
+          return singleError(
+            new ValidationError({
+              key: context.key,
+              message: `Invalid URL: "${result.value}"`,
+              code: "invalid_value",
+              value: result.value,
+            }),
+          )
+        }
         return result
       } catch {
         return singleError(

@@ -49,18 +49,35 @@ function createEnvProxy<T extends NextSchemaDefinition>(
 ): InferredNextEnv<T> {
   const serverKeySet = new Set(serverKeys)
   const combined = { ...server, ...client }
+
+  function getMeta():
+    | {
+        get(k: string): string | undefined
+        has(k: string): boolean
+        keys(): string[]
+        toJSON(): Record<string, string | undefined>
+      }
+    | undefined {
+    const srvMeta = (server as Record<string, unknown> & { meta?: unknown }).meta
+    if (srvMeta && typeof (srvMeta as { get: unknown }).get === "function")
+      return srvMeta as ReturnType<typeof getMeta>
+    const cliMeta = (client as Record<string, unknown> & { meta?: unknown }).meta
+    if (cliMeta && typeof (cliMeta as { get: unknown }).get === "function")
+      return cliMeta as ReturnType<typeof getMeta>
+    return undefined
+  }
+
+  const meta = getMeta()
+
   return new Proxy({} as InferredNextEnv<T>, {
     get(_, key: string) {
+      if (key === "meta" && meta) return meta
       if (serverKeySet.has(key)) {
         if (!isServer) {
           throw new Error(
             `Server-only environment variable "${key}" is not accessible on the client. ` +
               "Prefix it with NEXT_PUBLIC_ to expose it to the client bundle.",
           )
-        }
-        const srv = server as Record<string, unknown> & { meta?: { get(k: string): unknown } }
-        if (srv.meta && typeof srv.meta.get === "function") {
-          return srv.meta.get(key)
         }
         return server[key as keyof typeof server]
       }
@@ -70,12 +87,18 @@ function createEnvProxy<T extends NextSchemaDefinition>(
       return undefined
     },
     has(_, key: string) {
+      if (key === "meta" && meta) return true
       return key in combined
     },
     ownKeys() {
-      return Reflect.ownKeys(combined)
+      const keys = Reflect.ownKeys(combined)
+      if (meta) return [...keys, "meta"]
+      return keys
     },
     getOwnPropertyDescriptor(_, key: string) {
+      if (key === "meta" && meta) {
+        return { configurable: true, enumerable: false, writable: false, value: meta }
+      }
       if (key in combined) {
         return { configurable: true, enumerable: true }
       }

@@ -31,10 +31,22 @@ export function applyChain<T>(validator: Validator<T>): Validator<T> & Chainable
     > &
       ChainableMethods<T | undefined>
 
-  chainable.default = (value: T) =>
-    applyChain(
+  chainable.default = (value: T) => {
+    if (process.env.NODE_ENV === "development") {
+      const result = validator.parse(value as unknown as string, {
+        key: ".default()",
+        path: [],
+      })
+      if (!result.success) {
+        console.warn(
+          `[ctroenv] Default value "${String(value)}" fails validation: ${result.errors[0]?.message ?? "unknown error"}`,
+        )
+      }
+    }
+    return applyChain(
       withNewMetadata({ hasDefault: true, defaultValue: value, optional: false }),
     ) as unknown as Validator<T> & ChainableMethods<T>
+  }
 
   chainable.describe = (text: string) => applyChain(withNewMetadata({ description: text }))
 

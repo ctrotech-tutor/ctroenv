@@ -10,6 +10,10 @@ export interface PickValidator<T extends readonly string[]>
     ChainableMethods<T[number]> {}
 
 export function pick<const T extends readonly string[]>(values: T): PickValidator<T> {
+  if (values.length === 0) {
+    throw new TypeError("pick() requires at least one allowed value")
+  }
+
   const validSet = new Set(values)
 
   function suggest(input: string): string | undefined {
