@@ -29,22 +29,45 @@ function tryImportMetaEnv(): EnvSource | undefined {
   return undefined
 }
 
+function tryDenoEnv(): EnvSource | undefined {
+  const deno = (globalThis as Record<string, unknown>).Deno as
+    | { env: { get: (key: string) => string | undefined } }
+    | undefined
+  if (deno?.env?.get) return { get: (k) => deno.env.get(k) }
+  return undefined
+}
+
+function tryBunEnv(): EnvSource | undefined {
+  const bun = (globalThis as Record<string, unknown>).Bun as
+    | { env: Record<string, string | undefined> }
+    | undefined
+  if (bun?.env) return { get: (k) => bun.env[k] }
+  return undefined
+}
+
 export function detectSource(): EnvSource {
   const fromProcess = tryProcessEnv()
   const fromImportMeta = tryImportMetaEnv()
+  const fromDeno = tryDenoEnv()
+  const fromBun = tryBunEnv()
 
-  if (fromProcess && fromImportMeta) {
-    return {
-      get(key: string) {
-        const fromMeta = fromImportMeta.get(key)
-        if (fromMeta !== undefined) return fromMeta
-        return fromProcess.get(key)
-      },
-    }
+  const sources = [fromImportMeta, fromDeno, fromBun, fromProcess].filter(
+    (s): s is EnvSource => s !== undefined,
+  )
+
+  if (sources.length === 0) {
+    throw new Error("No environment source detected. Pass `source` explicitly to `defineEnv()`.")
   }
 
-  if (fromImportMeta) return fromImportMeta
-  if (fromProcess) return fromProcess
+  if (sources.length === 1) return sources[0] as EnvSource
 
-  throw new Error("No environment source detected. Pass `source` explicitly to `defineEnv()`.")
+  return {
+    get(key: string) {
+      for (const source of sources) {
+        const value = source.get(key)
+        if (value !== undefined) return value
+      }
+      return undefined
+    },
+  }
 }

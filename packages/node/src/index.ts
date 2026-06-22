@@ -9,6 +9,7 @@ export interface LoadEnvOptions {
   encoding?: BufferEncoding
   override?: boolean
   system?: boolean
+  native?: boolean
 }
 
 export function nodeSource(): EnvSource {
@@ -126,6 +127,15 @@ export function loadEnv(opts?: LoadEnvOptions): EnvSource {
   const root = opts?.path ?? process.cwd()
   const encoding = opts?.encoding ?? "utf-8"
   const env: Record<string, string> = {}
+
+  if (opts?.native && typeof process.loadEnvFile === "function") {
+    try {
+      process.loadEnvFile(root)
+      return nodeSource()
+    } catch {
+      // Fall through to custom parsing
+    }
+  }
 
   for (const filePath of resolveFiles(root)) {
     if (existsSync(filePath)) {
