@@ -53,6 +53,17 @@ export default withCtroEnv(schema, nextConfig)
 | `defineEnv(schema)` | Returns proxied env object with server/client access control |
 | `withCtroEnv(schema, config?)` | Next.js config wrapper with build-time validation |
 
+### Secret values
+
+Secret variables (`.secret()`) are masked to `"********"` on the env object. Access raw values via `env.meta.get("KEY")`.
+
+```ts
+env.JWT_SECRET          // "********"
+env.meta.get("JWT_SECRET") // actual value
+env.meta.keys()         // ["JWT_SECRET"]
+env.meta.has("JWT_SECRET") // true
+```
+
 ## Documentation
 
 Full documentation at [ctroenv.vercel.app](https://ctroenv.vercel.app)

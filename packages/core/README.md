@@ -62,10 +62,12 @@ All validators support: `.optional()`, `.default(v)`, `.describe(text)`, `.secre
 | `defineEnv(schema, opts?)` | Validate and return typed env object |
 | `string()` | String validator factory |
 | `number()` | Number validator factory (coerces strings) |
-| `boolean()` | Boolean validator factory (coerces true/false/yes/no/on/off/1/0) |
-| `pick(values)` | Enum validator from string list |
-| `formatErrors(errors)` | Format validation errors for CLI output |
+| `boolean()` | Boolean validator factory (coerces true/false/yes/no/on/off/1/0, plus y/n/t/f) |
+| `pick(values)` | Enum validator from string list (throws on empty array) |
 | `CtroEnvError` | Error class with all validation errors |
+| `formatErrors(errors)` | Format validation errors for CLI output |
+| `defineSchema(def)` | Define reusable schema fragments |
+| `extendSchema(base, ext)` | Extend a base schema with additional fields |
 
 ## Error Handling
 
