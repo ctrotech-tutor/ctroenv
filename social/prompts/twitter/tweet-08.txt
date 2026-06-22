@@ -1,1 +1,0 @@
-A clean card-style layout with three action buttons stacked vertically: "📖 Read the Docs", "⭐ Star on GitHub", "📦 npm install @ctroenv/core". A subtle gradient background from blue (#2563eb) to teal (#14b8a6). Minimalist call-to-action design. 16:9 ratio, 1200x675.

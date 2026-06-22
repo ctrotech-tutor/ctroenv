@@ -1,1 +1,0 @@
-Six small rectangular package boxes arranged in a 2x3 grid, each with a different subtle icon and label: core (gear), cli (terminal), node (leaf), vite (bolt), nextjs (triangle), shared (nodes). One box (core) is highlighted in blue (#2563eb) to emphasize it's the foundation. Flat vector style, clean and organized. 16:9 ratio, 1200x675.

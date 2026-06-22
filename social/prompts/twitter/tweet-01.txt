@@ -1,1 +1,0 @@
-A dark-themed VS Code editor screenshot showing a TypeScript schema definition with colorful syntax highlighting. The code block shows defineEnv with string().url() and number().port() chains. A small "ctroenv" badge in the bottom-right corner. Dark background with blue (#2563eb) and teal (#14b8a6) syntax highlights. Clean, sharp code screenshot aesthetic. 16:9 ratio, 1200x675.

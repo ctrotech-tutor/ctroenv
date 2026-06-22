@@ -1,1 +1,0 @@
-A VS Code IDE screenshot showing chainable method autocomplete — the cursor is after string(). and a dropdown shows .url(), .email(), .min(), .max(), .secret(), .describe(), .optional() with type signatures. Dark theme, sharp code font. Blue (#2563eb) highlight on the selected item. 16:9 ratio, 1200x675.
