@@ -47,7 +47,7 @@
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
     "@ctroenv/shared": "^1.0.0",
-    "commander": "^13.1",
+    "commander": "^15.0",
     "dotenv": "^16.4",
     "jiti": "^2.4",
     "picocolors": "^1.1",
