@@ -81,23 +81,9 @@ const env = defineEnv(schema, {
 
 ### Build Output
 
-On successful validation:
-
-```
-✓ CtroEnv: All environment variables valid
-```
-
-On validation failure (with `failOnError: true`):
-
-```
-✗ CtroEnv: [formatted validation errors]
-```
-
-On validation failure (with `failOnError: false`):
-
-```
-✗ CtroEnv: [formatted validation errors] (build continues)
-```
+- **Success:** Logs `✓ CtroEnv: All environment variables valid`
+- **Failure with `failOnError: true` (default):** Emits a build error with `✗ CtroEnv: ...` — stops the build
+- **Failure with `failOnError: false`:** Emits a build warning with `✗ CtroEnv: ...` — build continues
 
 ## Documentation
 

@@ -128,7 +128,7 @@ export default defineConfig({
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `schema` | `string` | — | Path to schema file |
+| `schema` | `string` | `"src/env.ts"` | Path to schema file |
 | `sources.default` | `string` | `".env"` | Default env file path |
 | `sources.production` | `string` | — | Production env file path |
 | `output.example` | `string` | `".env.example"` | Output path for `generate` |

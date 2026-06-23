@@ -139,7 +139,7 @@ function semver() {
 |-----------------|-------------|
 | `CtroEnvError` | Error class containing all validation errors |
 | `formatErrors(errors)` | Format errors for CLI output (grouped, colorized) |
-| `ValidationError` | Single validation error: `{ key, message, code }` |
+| `ValidationError` | Single validation error: `{ key, message, code, value?, originalValue?, suggestion? }` |
 | `ErrorCode` | Enum: `missing_required`, `type_mismatch`, `invalid_value`, `validation_failed` |
 
 ```ts

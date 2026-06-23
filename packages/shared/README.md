@@ -16,7 +16,7 @@ This package is re-exported through `@ctroenv/core` and other CtroEnv packages. 
 createLogger(options?: LoggerOptions): Logger
 ```
 
-Creates a structured logger with level filtering and ANSI colorization.
+Creates a structured logger with level filtering, ANSI colorization, and child logger support.
 
 ```ts
 import { createLogger } from "@ctroenv/shared"
@@ -26,22 +26,24 @@ logger.info("Server starting on port %d", 3000)
 logger.debug("Only shown when level is 'debug'") // filtered at info level
 
 // Child logger with inherited options
-const child = logger.child({ label: "db" })
-child.warn("Connection pool exhausted")
+const db = logger.child("db")
+db.warn("Connection pool exhausted")
 ```
 
 ### Options
 
 ```ts
 interface LoggerOptions {
-  level?: LogLevel        // "debug" | "info" | "warn" | "error" (default: "info")
-  label?: string          // Optional prefix label
+  name?: string                          // Optional prefix label
+  level?: LogLevel                       // "debug" | "info" | "warn" | "error" (default: "info")
+  colors?: boolean                       // Enable ANSI color output (default: auto from TTY)
+  stream?: { write(s: string): void; isTTY?: boolean }  // Output stream (default: stderr)
 }
 
 type LogLevel = "debug" | "info" | "warn" | "error"
 ```
 
-### Logger Methods
+### Methods
 
 | Method | Description |
 |--------|-------------|
@@ -49,16 +51,20 @@ type LogLevel = "debug" | "info" | "warn" | "error"
 | `info(msg, ...args)` | Info-level log |
 | `warn(msg, ...args)` | Warning-level log |
 | `error(msg, ...args)` | Error-level log |
-| `child(opts)` | Create child logger with inherited context |
+| `child(name)` | Create child logger with inherited context (`name` is appended to parent name with `:`) |
 
 ### Formatters
 
 ```ts
 import { colorize, formatLevel } from "@ctroenv/shared"
 
-colorize("text", "cyan")       // ANSI-colorized string
-formatLevel("info")            // "INFO" with level-appropriate color
+colorize("text", "cyan", true)     // ANSI-colorized string
+formatLevel("info", true)          // "INFO" with level-appropriate color
 ```
+
+`colorize(text, color, enabled)` applies ANSI color codes when `enabled` is true. Colors: `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `gray`, `dim`, `reset`.
+
+`formatLevel(level, colors)` returns the level label uppercased with level-appropriate color.
 
 ---
 
