@@ -4,6 +4,7 @@ import type { Plugin } from "vite"
 export interface CtroEnvPluginOptions {
   schema: string | SchemaDefinition
   failOnError?: boolean
+  maskWith?: string
 }
 
 export function viteSource() {
@@ -40,7 +41,10 @@ export function ctroenvPlugin(opts: CtroEnvPluginOptions): Plugin {
         const schema: SchemaDefinition =
           typeof opts.schema === "string" ? await loadSchemaModule(opts.schema) : opts.schema
 
-        defineEnv(schema, { source: viteSource() })
+        defineEnv(schema, {
+          source: viteSource(),
+          ...(opts.maskWith ? { maskWith: opts.maskWith } : {}),
+        })
 
         this.warn("✓ CtroEnv: All environment variables valid")
       } catch (e) {

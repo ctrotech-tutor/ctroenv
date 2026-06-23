@@ -46,7 +46,7 @@ export function pick<const T extends readonly string[]>(values: T): PickValidato
         const expected = values.map((v) => `'${v}'`).join(", ")
 
         return singleError(
-          errInvalid(context.key, input, `Expected one of ${expected}, received "${input}"`, {
+          errInvalid(context.key, input, `Expected one of ${expected}`, {
             suggestion: suggestion ? `Did you mean '${suggestion}'?` : undefined,
           }),
         )

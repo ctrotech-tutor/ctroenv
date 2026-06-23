@@ -55,9 +55,15 @@ export function walkSchema(
       const isSecret = validator.metadata.isSecret
       errors.push(
         ...result.errors.map((e) => {
-          return errWrap(key, isSecret ? "********" : (e.value ?? raw), e.message, e.code, {
-            suggestion: e.suggestion,
-          })
+          return errWrap(
+            key,
+            isSecret ? "********" : (e.value ?? raw),
+            isSecret ? "Invalid value for secret variable" : e.message,
+            e.code,
+            {
+              suggestion: e.suggestion,
+            },
+          )
         }),
       )
     }

@@ -126,7 +126,10 @@ async function runValidation(
 
   try {
     const source = getSource(sourcePath)
-    const env = defineEnv(options.schema, source ? { source } : undefined)
+    const env = defineEnv(options.schema, {
+      ...(source ? { source } : {}),
+      ...(options.secrets?.maskWith ? { maskWith: options.secrets.maskWith } : {}),
+    })
     spinner.stop()
 
     if (options.json === "json") {

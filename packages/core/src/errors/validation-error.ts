@@ -5,6 +5,7 @@ export class ValidationError {
   readonly message: string
   readonly code: ErrorCode
   readonly value: unknown | undefined
+  readonly originalValue: unknown | undefined
   readonly suggestion: string | undefined
 
   constructor(opts: {
@@ -12,12 +13,14 @@ export class ValidationError {
     message: string
     code: ErrorCode
     value?: unknown
+    originalValue?: unknown
     suggestion?: string | undefined
   }) {
     this.key = opts.key
     this.message = opts.message
     this.code = opts.code
     this.value = opts.value
+    this.originalValue = opts.originalValue
     this.suggestion = opts.suggestion
   }
 }

@@ -6,9 +6,10 @@ import { walkSchema } from "./validate"
 export interface DefineEnvOptions {
   source?: EnvSource | Record<string, string | undefined>
   prefix?: string
+  maskWith?: string
 }
 
-const MASKED = "********"
+const MASKED_DEFAULT = "********"
 
 export function defineEnv<T extends SchemaDefinition>(
   schema: T,
@@ -32,7 +33,10 @@ export function defineEnv<T extends SchemaDefinition>(
       .map(([k]) => k),
   )
 
-  return createMaskedEnv(value, secretKeys) as unknown as EnvResult<T>
+  const maskWith = MASKED_DEFAULT
+  const configurableMask = opts?.maskWith
+
+  return createMaskedEnv(value, secretKeys, maskWith, configurableMask) as unknown as EnvResult<T>
 }
 
 function createMeta(values: Record<string, unknown>): EnvMeta {
@@ -61,13 +65,35 @@ function createMeta(values: Record<string, unknown>): EnvMeta {
 function createMaskedEnv(
   values: Record<string, unknown>,
   secretKeys: Set<string>,
+  defaultMask: string,
+  configurableMask?: string,
 ): Record<string, unknown> & { meta: EnvMeta } {
   const meta = createMeta(values)
+
+  function maskFor(key: string | symbol): string {
+    if (typeof key !== "string") return defaultMask
+    return secretKeys.has(key) ? (configurableMask ?? defaultMask) : defaultMask
+  }
 
   const proxy = new Proxy(values, {
     get(_target, key, _receiver) {
       if (key === "meta") return meta
-      if (typeof key === "string" && secretKeys.has(key)) return MASKED
+      if (key === Symbol.for("nodejs.util.inspect.custom")) {
+        return (_depth: number, _opts: unknown) => {
+          const obj: Record<string, unknown> = {}
+          for (const k of Reflect.ownKeys(values)) {
+            if (typeof k === "string") {
+              if (secretKeys.has(k)) {
+                obj[k] = maskFor(k)
+              } else {
+                obj[k] = Reflect.get(values, k)
+              }
+            }
+          }
+          return obj
+        }
+      }
+      if (typeof key === "string" && secretKeys.has(key)) return maskFor(key)
       return Reflect.get(values, key)
     },
     has(_target, key) {
@@ -86,7 +112,11 @@ function createMaskedEnv(
           value: meta,
         }
       }
-      return Reflect.getOwnPropertyDescriptor(values, key)
+      const desc = Reflect.getOwnPropertyDescriptor(values, key)
+      if (desc && typeof key === "string" && secretKeys.has(key)) {
+        return { ...desc, value: maskFor(key) }
+      }
+      return desc
     },
     set() {
       throw new TypeError("Cannot assign to read-only property")
