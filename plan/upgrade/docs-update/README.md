@@ -1,6 +1,6 @@
 # Documentation Site Update Plan
 
-**Reference:** Phase 1 (`phase/01-bug-fixes`, `6067cf1`) + Phase 2 (`phase/02-client-server`, `4c88db0`)
+**Reference:** Phase 1 (`phase/01-bug-fixes`, `6067cf1`) + Phase 2 (`phase/02-client-server`, `4c88db0`) + Phase 3 (`phase/03-cross-runtime`, `9ebf518`) + Phase 4 (`phase/04-cli`, `38fee36`) + Phase 5 (`phase/05-security`, pending)
 **Target docs:** `apps/docs/content/docs/` (MDX files)
 **Also affected:** `.opencode/skills/ctroenv/SKILL.md` (agent guide)
 
@@ -231,6 +231,29 @@ If desired, create `content/blog/v1-5-0.mdx` covering:
 - Native .env file support (opt-in)
 - Architectural decisions (dropped auto-native, workers naming)
 
+### 19. `docs/core/define-env.mdx` — Mask options
+
+Add `maskWith` option to `defineEnv()` API reference:
+
+> **`maskWith?: string`** (default `"********"`) — Custom string to display in place of secret variable values. Pass empty string `""` for blank masking.
+
+### 20. `docs/core/security.mdx` (or similar) — Security documentation
+
+New page covering:
+- How secret masking works (Proxy, getOwnPropertyDescriptor, inspect)
+- `maskWith` configuration
+- `structuredClone` limitation (not supported on Proxy)
+- Error message masking for secrets
+- Best practices: chain order (`.min(8).secret()` not `.secret().min(8)`)
+
+### 21. (Optional) New Blog Post — v1.7.0
+
+If desired, create `content/blog/v1-7-0.mdx` covering:
+- Custom mask string (`maskWith`)
+- Security fixes: `getOwnPropertyDescriptor` leak, error message leak
+- `util.inspect` support
+- `originalValue` field in error objects
+
 ---
 
 ## Effort Estimate
@@ -246,12 +269,16 @@ If desired, create `content/blog/v1-5-0.mdx` covering:
 | `docs/core/schema-composition.mdx` | Edit (new section) | 10 min |
 | `docs/node.mdx` | Edit (native option note) | 5 min |
 | `docs/nextjs.mdx` | Edit (imports + type references) | 15 min |
+| `docs/core/define-env.mdx` | Edit (maskWith option) | 5 min |
+| `docs/core/security.mdx` (or similar) | Write new MDX | 15 min |
 | `SKILL.md` | Review + edit | 15 min |
 | `README.md` | Review (likely no changes) | 5 min |
 | New blog post v1.3.0 | Write new MDX | 30 min |
 | New blog post v1.4.0 | Write new MDX | 20 min |
 | New blog post v1.5.0 | Write new MDX | 20 min |
-| **Total** | | **~3 hours** |
+| New blog post v1.6.0 | Write new MDX | 20 min |
+| New blog post v1.7.0 | Write new MDX | 20 min |
+| **Total** | | **~4 hours** |
 
 ---
 

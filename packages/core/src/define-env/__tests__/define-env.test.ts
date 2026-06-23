@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { boolean, number, string } from "../../validators"
+import { boolean, number, pick, string } from "../../validators"
 import { defineEnv } from "../index"
 
 describe("defineEnv()", () => {
@@ -101,6 +101,138 @@ describe("defineEnv()", () => {
       )
       expect(env.JWT_SECRET).toBe("********")
       expect(env.API_KEY).toBe("********")
+    })
+
+    it("supports custom maskWith option", () => {
+      const env = defineEnv(
+        { TOKEN: string().secret() },
+        { source: { TOKEN: "real-value" }, maskWith: "***" },
+      )
+      expect(env.TOKEN).toBe("***")
+      const desc = Object.getOwnPropertyDescriptor(env, "TOKEN")
+      expect(desc?.value).toBe("***")
+    })
+
+    it("supports empty string mask", () => {
+      const env = defineEnv(
+        { TOKEN: string().secret() },
+        { source: { TOKEN: "real-value" }, maskWith: "" },
+      )
+      expect(env.TOKEN).toBe("")
+    })
+
+    it("originalValue is preserved in validation errors for non-secret vars", () => {
+      try {
+        defineEnv({ ROLE: pick(["admin", "user"] as const) }, { source: { ROLE: "hacker" } })
+        expect.unreachable("Should have thrown")
+      } catch (e) {
+        const error = (e as { errors: readonly unknown[] }).errors[0] as {
+          value: unknown
+          originalValue: unknown
+        }
+        expect(error.value).toBe("hacker")
+        expect(error.originalValue).toBeUndefined()
+      }
+    })
+
+    it("secret error masks both value and originalValue", () => {
+      try {
+        defineEnv(
+          { ROLE: pick(["admin", "user"] as const).secret() },
+          { source: { ROLE: "hacker" } },
+        )
+        expect.unreachable("Should have thrown")
+      } catch (e) {
+        const error = (e as { errors: readonly unknown[] }).errors[0] as {
+          value: unknown
+          originalValue: unknown
+        }
+        expect(error.value).toBe("********")
+        expect(error.originalValue).toBeUndefined()
+      }
+    })
+
+    it("getOwnPropertyDescriptor masks secret values", () => {
+      const env = defineEnv(
+        { SECRET: string().secret(), PUBLIC: string() },
+        { source: { SECRET: "hidden", PUBLIC: "visible" } },
+      )
+      const secretDesc = Object.getOwnPropertyDescriptor(env, "SECRET")
+      expect(secretDesc?.value).toBe("********")
+      expect(secretDesc?.writable).toBe(true)
+
+      const publicDesc = Object.getOwnPropertyDescriptor(env, "PUBLIC")
+      expect(publicDesc?.value).toBe("visible")
+    })
+
+    it("Object.keys and getOwnPropertyNames include secret keys", () => {
+      const env = defineEnv(
+        { SECRET: string().secret(), PUBLIC: string() },
+        { source: { SECRET: "hidden", PUBLIC: "visible" } },
+      )
+      expect(Object.keys(env)).toEqual(["SECRET", "PUBLIC"])
+      expect(Object.getOwnPropertyNames(env)).toContain("SECRET")
+    })
+
+    it("env.toString returns Object.prototype.toString", () => {
+      const env = defineEnv({ SECRET: string().secret() }, { source: { SECRET: "hidden" } })
+      expect(env.toString).toBe(Object.prototype.toString)
+      expect(Object.prototype.toString.call(env)).toBe("[object Object]")
+    })
+
+    it("env.__proto__ is Object.prototype", () => {
+      const env = defineEnv({ SECRET: string().secret() }, { source: { SECRET: "hidden" } })
+      expect(Object.getPrototypeOf(env)).toBe(Object.prototype)
+    })
+
+    it("util.inspect does not leak secret values", () => {
+      const env = defineEnv(
+        { SECRET: string().secret(), PUBLIC: string() },
+        { source: { SECRET: "hidden", PUBLIC: "visible" } },
+      )
+      const kInspect = Symbol.for("nodejs.util.inspect.custom")
+      const inspected = (env as unknown as Record<symbol, () => unknown>)[kInspect]?.()
+      expect(inspected).toBeDefined()
+      const inspectedStr = JSON.stringify(inspected)
+      expect(inspectedStr).not.toContain("hidden")
+      expect(inspectedStr).toContain("********")
+      expect(inspectedStr).toContain("visible")
+    })
+
+    it("error messages do not leak secret values for pick().secret()", () => {
+      try {
+        defineEnv(
+          { ROLE: pick(["admin", "user"] as const).secret() },
+          { source: { ROLE: "hacker" } },
+        )
+        expect.unreachable("Should have thrown")
+      } catch (e) {
+        const errStr = String(e)
+        expect(errStr).not.toContain("hacker")
+        expect(errStr).not.toContain("received")
+      }
+    })
+
+    it("error messages do not leak for string().min().secret()", () => {
+      try {
+        defineEnv({ PASSWORD: string().min(8).secret() }, { source: { PASSWORD: "short" } })
+        expect.unreachable("Should have thrown")
+      } catch (e) {
+        const errStr = String(e)
+        expect(errStr).not.toContain("short")
+        expect(errStr).toContain("Invalid value for secret variable")
+      }
+    })
+
+    it("error messages do not leak for number().positive().secret()", () => {
+      try {
+        defineEnv({ RATE: number().positive().secret() }, { source: { RATE: "-5" } })
+        expect.unreachable("Should have thrown")
+      } catch (e) {
+        const errStr = String(e)
+        expect(errStr).not.toContain("-5")
+        expect(errStr).toContain("Invalid value for secret variable")
+      }
     })
 
     it("leaves non-secret values unmasked", () => {

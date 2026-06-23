@@ -15,7 +15,10 @@ export type NextSchemaDefinition = ClientServerSchema
 
 export type InferredNextEnv<T extends NextSchemaDefinition> = InferredClientServerEnv<T>
 
-export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNextEnv<T> {
+export function defineEnv<T extends NextSchemaDefinition>(
+  schema: T,
+  opts?: { maskWith?: string },
+): InferredNextEnv<T> {
   const isServer = typeof window === "undefined"
   const source = detectSource()
 
@@ -25,11 +28,11 @@ export function defineEnv<T extends NextSchemaDefinition>(schema: T): InferredNe
   const serverKeys = Object.keys(schema.server)
 
   if (isServer) {
-    serverResult = coreDefineEnv(schema.server, { source })
-    clientResult = coreDefineEnv(schema.client, { source })
+    serverResult = coreDefineEnv(schema.server, { source, maskWith: opts?.maskWith })
+    clientResult = coreDefineEnv(schema.client, { source, maskWith: opts?.maskWith })
   } else {
     serverResult = {}
-    clientResult = coreDefineEnv(schema.client, { source })
+    clientResult = coreDefineEnv(schema.client, { source, maskWith: opts?.maskWith })
   }
 
   return createEnvProxy<T>(serverKeys, serverResult, clientResult, isServer)

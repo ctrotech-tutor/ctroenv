@@ -40,13 +40,14 @@ export function errInvalid(
   key: string,
   value: unknown,
   message: string,
-  opts?: MessageOptions,
+  opts?: MessageOptions & { originalValue?: unknown },
 ): ValidationError {
   return new ValidationError({
     key,
     message,
     code: "invalid_value",
     value,
+    originalValue: opts?.originalValue,
     suggestion: opts?.suggestion,
   })
 }
@@ -56,13 +57,14 @@ export function errWrap(
   value: unknown,
   message: string,
   code: ErrorCode,
-  opts?: MessageOptions,
+  opts?: MessageOptions & { originalValue?: unknown },
 ): ValidationError {
   return new ValidationError({
     key,
     message,
     code,
     value,
+    originalValue: opts?.originalValue,
     suggestion: opts?.suggestion,
   })
 }
