@@ -122,4 +122,76 @@ describe("string()", () => {
       expect(result.success).toBe(false)
     })
   })
+
+  describe(".hostname()", () => {
+    it("accepts simple hostname", () => {
+      const result = string()
+        .hostname()
+        .parse("localhost", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+
+    it("accepts domain", () => {
+      const result = string()
+        .hostname()
+        .parse("example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+
+    it("accepts subdomain", () => {
+      const result = string()
+        .hostname()
+        .parse("api.example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+
+    it("accepts FQDN with trailing dot", () => {
+      const result = string()
+        .hostname()
+        .parse("example.com.", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+
+    it("accepts hostname with hyphens", () => {
+      const result = string()
+        .hostname()
+        .parse("my-service.internal", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+
+    it("rejects hostname with underscore", () => {
+      const result = string()
+        .hostname()
+        .parse("bad_host", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects hostname with spaces", () => {
+      const result = string()
+        .hostname()
+        .parse("bad host", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects empty string", () => {
+      const result = string()
+        .hostname()
+        .parse("", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects label with leading hyphen", () => {
+      const result = string()
+        .hostname()
+        .parse("-bad.example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects label with trailing hyphen", () => {
+      const result = string()
+        .hostname()
+        .parse("bad-.example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+  })
 })

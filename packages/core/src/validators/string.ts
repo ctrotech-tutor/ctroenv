@@ -8,6 +8,7 @@ import { createValidator } from "./factory"
 export interface StringValidator extends Validator<string>, ChainableMethods<string> {
   url(): StringValidator
   email(): StringValidator
+  hostname(): StringValidator
   port(): StringValidator
   min(length: number): StringValidator
   max(length: number): StringValidator
@@ -52,6 +53,7 @@ export function string(): StringValidator {
       Object.assign(wrapped, {
         url: original.url,
         email: original.email,
+        hostname: original.hostname,
         port: original.port,
         min: original.min,
         max: original.max,
@@ -76,6 +78,23 @@ export function string(): StringValidator {
       const re =
         /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
       return re.test(v) ? undefined : "Invalid email address"
+    })
+
+  base.hostname = () =>
+    refine((v) => {
+      if (v.length > 253) return "Hostname too long (max 253 characters)"
+      const labels = v.replace(/\.$/, "").split(".")
+      if (labels.some((l) => l.length === 0)) return "Invalid hostname: empty label"
+      for (const label of labels) {
+        if (label.length > 63) return `Hostname label too long: "${label}" (max 63)`
+        if (!/^[a-zA-Z0-9]/.test(label))
+          return `Hostname label must start with alphanumeric: "${label}"`
+        if (!/[a-zA-Z0-9]$/.test(label))
+          return `Hostname label must end with alphanumeric: "${label}"`
+        if (/[^a-zA-Z0-9-]/.test(label))
+          return `Hostname label contains invalid characters: "${label}"`
+      }
+      return undefined
     })
 
   base.port = () =>

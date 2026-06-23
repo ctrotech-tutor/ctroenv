@@ -22,9 +22,25 @@ export type {
 export type {
   BooleanValidator,
   ChainableMethods,
+  IpValidator,
   NumberValidator,
   PickValidator,
+  SemverValidator,
   StringValidator,
+  UuidValidator,
 } from "./validators"
-export { applyChain, boolean, createValidator, number, pick, string } from "./validators"
+export {
+  applyChain,
+  boolean,
+  createValidator,
+  guid,
+  ip,
+  ipv4,
+  ipv6,
+  number,
+  pick,
+  semver,
+  string,
+  uuid,
+} from "./validators"
 export { email, integer, max, min, port, regex, url } from "./validators/refinements"
