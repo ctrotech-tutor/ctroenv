@@ -7,6 +7,18 @@ import type { Format } from "../types"
 import { cliLogger } from "../utils/logger"
 import { createSpinner, divider, error, header, hint, keyValueTable } from "../utils/output"
 
+function getVersion(): string {
+  try {
+    const url = new URL("../../package.json", import.meta.url)
+    const pkg = JSON.parse(readFileSync(url, "utf-8"))
+    return pkg.version
+  } catch {
+    return "0.0.0"
+  }
+}
+
+const CLI_VERSION = getVersion()
+
 interface ValidateOptions {
   schema: SchemaDefinition
   source?: string
@@ -92,11 +104,13 @@ function displayJsonResult(
   })
 
   const result = {
+    version: CLI_VERSION,
     valid: errors.length === 0,
     source: sourceName,
     total: Object.keys(schema).length,
     errors: errors.length,
     variables,
+    timestamp: new Date().toISOString(),
   }
 
   console.log(JSON.stringify(result, null, 2))

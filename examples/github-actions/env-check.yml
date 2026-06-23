@@ -1,0 +1,56 @@
+name: Environment Validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Validate CI environment variables against schema
+        # Validate uses process.env by default — exit code drives pass/fail
+        run: npx ctroenv validate
+        env:
+          DATABASE_URL: postgres://localhost:5432/db
+          NODE_ENV: test
+          PORT: 3000
+          JWT_SECRET: test-secret-key
+
+  check-env-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check committed .env against schema
+        # Reads .env file — warns about unknown vars too
+        run: npx ctroenv check --warn-unknown
+
+  verify-example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify .env.example is up to date
+        run: |
+          cp .env.example .env.example.bak
+          npx ctroenv generate --output .env.example
+          diff .env.example .env.example.bak || (
+            echo "❌ .env.example is out of date — re-run: npx ctroenv generate"
+            exit 1
+          )

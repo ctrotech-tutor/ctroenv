@@ -120,6 +120,7 @@ program
   .description("Compare .env against schema")
   .option("--source <path>", "Source env file to check")
   .option("--strict", "Also validate values against schema")
+  .option("--warn-unknown", "Warn about env vars in source not present in schema")
   .option("--json", "Output JSON instead of formatted text")
   .action(async (opts) => {
     await setupCommand(async (schema, config, _schemaPath) => {
@@ -127,6 +128,7 @@ program
         schema,
         source: opts.source ?? config.sources?.default ?? ".env",
         strict: !!opts.strict,
+        warnUnknown: !!opts.warnUnknown,
         json: opts.json ? "json" : "text",
       })
     }, opts)

@@ -4,6 +4,7 @@ import { CtroEnvError, defineEnv, formatErrors, type ValidationError } from "@ct
 import { parse as parseDotenv } from "dotenv"
 import { ExitCode } from "../exit-codes"
 import type { Format } from "../types"
+import { suggestKey } from "../utils/levenshtein"
 import { divider, header, hint, success, warning } from "../utils/output"
 
 interface CheckOptions {
@@ -12,6 +13,7 @@ interface CheckOptions {
   example?: string
   json: Format
   strict?: boolean
+  warnUnknown?: boolean
 }
 
 interface CheckResult {
@@ -78,6 +80,7 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
   const result = compareKeys(options.schema, envKeys)
 
   let validationErrors: readonly ValidationError[] | null = null
+  let unknownSuggestions: Array<{ key: string; suggestion: string | null }> = []
 
   if (options.strict) {
     try {
@@ -90,19 +93,43 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
     }
   }
 
+  if (options.warnUnknown && result.unused.length > 0) {
+    const schemaKeys = Object.keys(options.schema)
+    unknownSuggestions = result.unused.map((key) => ({
+      key,
+      suggestion: suggestKey(key, schemaKeys),
+    }))
+  }
+
   if (options.json === "json") {
     const output: Record<string, unknown> = {
       source: options.source,
       total: Object.keys(options.schema).length,
+      clean: result.missing.length === 0 && result.unused.length === 0 && !validationErrors,
+      summary: {
+        missing: result.missing.length,
+        unused: result.unused.length,
+        matched: result.matched.length,
+      },
       found: result.matched.length,
       missing: result.missing,
       unused: result.unused,
+      matched: result.matched,
       validationErrors,
-      clean: result.missing.length === 0 && result.unused.length === 0 && !validationErrors,
+      unknownSuggestions,
     }
     console.log(JSON.stringify(output, null, 2))
   } else {
     displayHumanResult(result, options.source)
+
+    if (unknownSuggestions.length > 0) {
+      process.stdout.write(`\n${warning("Unknown env vars found in source (not in schema):")}\n`)
+      for (const { key, suggestion } of unknownSuggestions) {
+        const msg = suggestion ? `${key} (no match — did you mean ${suggestion}?)` : key
+        process.stdout.write(`  ${msg}\n`)
+      }
+      process.stdout.write("\n")
+    }
 
     if (validationErrors) {
       process.stderr.write(`${warning("Value validation errors:")}\n`)

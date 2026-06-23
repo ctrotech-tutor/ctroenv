@@ -78,6 +78,10 @@ describe("validate command", () => {
     const parsed = JSON.parse(logs[0])
     expect(parsed.valid).toBe(false)
     expect(parsed.errors).toBeGreaterThan(0)
+    expect(parsed.version).toBeDefined()
+    expect(parsed.timestamp).toBeDefined()
+    expect(parsed.variables).toBeDefined()
+    expect(Array.isArray(parsed.variables)).toBe(true)
   })
 
   it("handles Next.js-style schema ({ server, client })", async () => {
