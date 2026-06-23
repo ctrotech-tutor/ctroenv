@@ -28,11 +28,11 @@ export function defineEnv<T extends NextSchemaDefinition>(
   const serverKeys = Object.keys(schema.server)
 
   if (isServer) {
-    serverResult = coreDefineEnv(schema.server, { source, maskWith: opts?.maskWith })
-    clientResult = coreDefineEnv(schema.client, { source, maskWith: opts?.maskWith })
+    serverResult = coreDefineEnv(schema.server, { source, ...(opts?.maskWith !== undefined ? { maskWith: opts.maskWith } : {}) })
+    clientResult = coreDefineEnv(schema.client, { source, ...(opts?.maskWith !== undefined ? { maskWith: opts.maskWith } : {}) })
   } else {
     serverResult = {}
-    clientResult = coreDefineEnv(schema.client, { source, maskWith: opts?.maskWith })
+    clientResult = coreDefineEnv(schema.client, { source, ...(opts?.maskWith !== undefined ? { maskWith: opts.maskWith } : {}) })
   }
 
   return createEnvProxy<T>(serverKeys, serverResult, clientResult, isServer)

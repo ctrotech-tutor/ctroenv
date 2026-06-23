@@ -4,6 +4,10 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
+    "paths": {
+      "@ctroenv/core": ["./packages/core/src"],
+      "@ctroenv/shared": ["./packages/shared/src"]
+    },
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,

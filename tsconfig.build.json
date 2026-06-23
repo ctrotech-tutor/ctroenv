@@ -4,5 +4,5 @@
     "noEmit": true
   },
   "include": ["packages/*/src"],
-  "exclude": ["**/__tests__"]
+  "exclude": ["**/__tests__", "**/__benchmarks__"]
 }

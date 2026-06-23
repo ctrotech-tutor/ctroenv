@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build -w packages/shared -w packages/core && npm run build -w packages/cli -w packages/nextjs -w packages/node -w packages/vite",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -23,6 +23,7 @@
     "@biomejs/biome": "^2.4.16",
     "@size-limit/file": "^12.1.0",
     "@types/node": "^25.9.2",
+    "@vitest/coverage-v8": "^4.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "rimraf": "^6.1.3",
