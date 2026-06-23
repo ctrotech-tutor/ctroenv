@@ -1,20 +1,38 @@
-# CtroEnv
+![CtroEnv](public/ctroenv.png)
 
-**Define once. Trust everywhere.**
+<h1 align="center">CtroEnv</h1>
 
-[![npm version](https://img.shields.io/npm/v/@ctroenv/core?color=3b82f6&label=core)](https://www.npmjs.com/package/@ctroenv/core)
-[![npm downloads](https://img.shields.io/npm/dm/@ctroenv/core?color=3b82f6)](https://www.npmjs.com/package/@ctroenv/core)
-[![License](https://img.shields.io/badge/license-MIT-3b82f6)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Biome](https://img.shields.io/badge/code_style-Biome-60a5fa?logo=biome)](https://biomejs.dev)
+<p align="center">
+  <strong>Define once. Trust everywhere.</strong>
+  <br>
+  TypeScript-first environment variable management toolkit.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@ctroenv/core">
+    <img src="https://img.shields.io/npm/v/@ctroenv/core?color=3b82f6&label=core" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@ctroenv/core">
+    <img src="https://img.shields.io/npm/dm/@ctroenv/core?color=3b82f6" alt="npm downloads">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-3b82f6" alt="license">
+  </a>
+  <a href="https://www.typescriptlang.org">
+    <img src="https://img.shields.io/badge/TypeScript-6.0+-3178c6?logo=typescript&logoColor=white" alt="TypeScript">
+  </a>
+  <a href="https://biomejs.dev">
+    <img src="https://img.shields.io/badge/code_style-Biome-60a5fa?logo=biome" alt="Biome">
+  </a>
+</p>
 
 A TypeScript-first environment management toolkit. Define your environment schema once — get validation, type inference, CLI tooling, and auto-generated docs across any JavaScript project.
 
-```typescript
+```ts
 import { defineEnv, string, number, pick } from "@ctroenv/core"
 
 const env = defineEnv({
-  DATABASE_URL: string().url().describe("PostgreSQL connection URL"),
+  DATABASE_URL: string().url().describe("Primary database connection"),
   PORT: number().port().default(3000),
   NODE_ENV: pick(["development", "production", "test"]),
 })
@@ -23,31 +41,29 @@ const env = defineEnv({
 console.log(env.PORT) // number — TypeScript knows this
 ```
 
----
-
 ## The Four Pillars
 
 | Pillar | What it does |
 |--------|-------------|
-| **Define** | Declare variables once with a chainable, type-safe schema — `.url()`, `.port()`, `.secret()`, `.min()`, `.max()`, `.default()` and more |
+| **Define** | Declare variables once with a chainable, type-safe schema — `.url()`, `.email()`, `.hostname()`, `.port()`, `.regex()`, `.min()`, `.max()`, `.int()`, `.positive()`, `.secret()`, `.default()`, and more |
 | **Validate** | Fail fast at startup with beautiful terminal errors grouped by category (missing vs invalid), with actionable fix suggestions |
 | **Document** | Auto-generate `.env.example`, `ENVIRONMENT.md`, and reference docs from your schema — no more stale documentation |
-| **Manage** | CLI commands for validation, generation, env diffing, and CI checks — plus built-in secret protection for sensitive values |
+| **Manage** | CLI commands for validation, generation, env diffing, CI checks, and scaffolding — plus built-in secret protection for sensitive values |
 
 ## Packages
 
-| Package | Description | Size (gzip) | Status |
-|---------|-------------|-------------|--------|
-| [`@ctroenv/core`](https://www.npmjs.com/package/@ctroenv/core) | Schema engine — define, validate, infer types | ~4 KB | [Published](https://www.npmjs.com/package/@ctroenv/core) |
-| [`@ctroenv/cli`](https://www.npmjs.com/package/@ctroenv/cli) | CLI — validate, generate, check, docs | ~15 KB | [Published](https://www.npmjs.com/package/@ctroenv/cli) |
-| [`@ctroenv/node`](https://www.npmjs.com/package/@ctroenv/node) | Node.js adapter — `process.env` source | ~2 KB | [Published](https://www.npmjs.com/package/@ctroenv/node) |
-| [`@ctroenv/vite`](https://www.npmjs.com/package/@ctroenv/vite) | Vite adapter — `import.meta.env` + build plugin | ~2 KB | [Published](https://www.npmjs.com/package/@ctroenv/vite) |
-| [`@ctroenv/nextjs`](https://www.npmjs.com/package/@ctroenv/nextjs) | Next.js adapter — client/server split, build-time validation | ~3 KB | [Published](https://www.npmjs.com/package/@ctroenv/nextjs) |
-| [`@ctroenv/shared`](https://www.npmjs.com/package/@ctroenv/shared) | Shared utilities — logger, type helpers | ~3 KB | [Published](https://www.npmjs.com/package/@ctroenv/shared) |
+| Package | Description | Size | Status |
+|---------|-------------|------|--------|
+| [`@ctroenv/core`](https://www.npmjs.com/package/@ctroenv/core) | Schema engine — define, validate, infer types | ~4 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/core) |
+| [`@ctroenv/cli`](https://www.npmjs.com/package/@ctroenv/cli) | CLI — validate, generate, check, docs, init | ~17 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/cli) |
+| [`@ctroenv/node`](https://www.npmjs.com/package/@ctroenv/node) | Node.js adapter — `process.env` + `.env` file loading | ~2 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/node) |
+| [`@ctroenv/vite`](https://www.npmjs.com/package/@ctroenv/vite) | Vite adapter — `import.meta.env` + build plugin | ~2 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/vite) |
+| [`@ctroenv/nextjs`](https://www.npmjs.com/package/@ctroenv/nextjs) | Next.js adapter — client/server split, build-time validation | ~3 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/nextjs) |
+| [`@ctroenv/shared`](https://www.npmjs.com/package/@ctroenv/shared) | Internal shared utilities — logger, helpers | ~3 KB gzip | [Published](https://www.npmjs.com/package/@ctroenv/shared) |
 
-All packages have **zero runtime dependencies** except `@ctroenv/cli` (commander, dotenv, picocolors).
+> **Zero runtime dependencies** across all packages. The `@ctroenv/cli` package bundles `commander`, `dotenv`, `jiti`, `chokidar`, and `picocolors` for CLI operations — all other packages remain dependency-free.
 
-## Quick Start
+## Installation
 
 ```bash
 npm install @ctroenv/core
@@ -59,7 +75,9 @@ pnpm add @ctroenv/core
 bun add @ctroenv/core
 ```
 
-```typescript
+## Quick Start
+
+```ts
 import { defineEnv, string, number, pick } from "@ctroenv/core"
 
 const env = defineEnv({
@@ -82,7 +100,65 @@ env.PORT          // number
 env.NODE_ENV      // "development" | "production" | "test"
 ```
 
-### With the CLI
+### Built-in Validators
+
+| Validator | Type | Refinements |
+|-----------|------|-------------|
+| `string()` | `string` | `.url()`, `.email()`, `.port()`, `.hostname()`, `.min()`, `.max()`, `.regex()` |
+| `number()` | `number` | `.int()`, `.positive()`, `.port()`, `.min()`, `.max()` |
+| `boolean()` | `boolean` | Coerces `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0`, `"y"`/`"n"`, `"t"`/`"f"` |
+| `pick([...])` | union literal | Enum validation from a string list |
+| `semver()` | `string` | Strict semver (no ranges, no `v` prefix) |
+| `ip()` / `ipv4()` / `ipv6()` | `string` | IP address validation |
+| `uuid()` / `guid()` | `string` | UUID (RFC 9562) and permissive GUID |
+
+### Chainable Methods
+
+Every validator supports: `.optional()`, `.default(v)`, `.describe(text)`, `.secret()`, `.validate(fn)`
+
+### Secret Masking
+
+Sensitive values marked with `.secret()` are automatically masked in output:
+
+```ts
+const env = defineEnv({ JWT_SECRET: string().secret() })
+env.JWT_SECRET           // "********"
+env.meta.get("JWT_SECRET") // actual value
+```
+
+### Schema Composition
+
+```ts
+import { defineSchema, extendSchema } from "@ctroenv/core"
+
+const base = defineSchema({
+  DATABASE_URL: string().url(),
+  PORT: number().port().default(3000),
+})
+
+const schema = extendSchema(base, {
+  JWT_SECRET: string().secret(),
+})
+```
+
+### Custom Validators
+
+```ts
+import { createValidator, applyChain, parseOk, singleError } from "@ctroenv/core"
+
+function semver() {
+  const base = createValidator<string>(
+    (input, ctx) =>
+      /^\d+\.\d+\.\d+$/.test(input)
+        ? parseOk(input)
+        : singleError({ key: ctx.key, message: "not valid semver", code: "invalid_value" }),
+    { typeLabel: "semver" },
+  )
+  return applyChain(base)
+}
+```
+
+## CLI
 
 ```bash
 # Install globally or use via npx
@@ -91,29 +167,44 @@ npm install -g @ctroenv/cli
 # Validate your .env against the schema
 ctroenv validate
 
+# Watch mode — re-validate on file changes
+ctroenv validate --watch
+
 # Generate .env.example from schema
 ctroenv generate
 
-# CI-friendly env diffing
-ctroenv check
+# CI-friendly env diffing (exit code 1 on mismatch)
+ctroenv check --strict
 
 # Auto-generate ENVIRONMENT.md
 ctroenv docs
+
+# Scaffold a new project
+ctroenv init
 ```
 
 ## Framework Adapters
 
-```typescript
-// Node.js — reads from process.env
+```ts
+// Node.js — read from process.env + .env files
+import { defineEnv } from "@ctroenv/core"
 import { loadEnv } from "@ctroenv/node"
-const env = loadEnv({ DATABASE_URL: string().url() })
 
-// Vite — reads from import.meta.env
+const env = defineEnv({ DATABASE_URL: string().url() }, {
+  source: loadEnv(),
+})
+
+// Vite — read from import.meta.env at build time
+import { defineEnv } from "@ctroenv/core"
 import { viteSource } from "@ctroenv/vite"
-const env = defineEnv({ API_URL: string().url() }, { source: viteSource() })
 
-// Next.js — build-time validation + runtime access
+const env = defineEnv({ API_URL: string().url() }, {
+  source: viteSource(),
+})
+
+// Next.js — client/server split with build-time validation
 import { defineEnv } from "@ctroenv/nextjs"
+
 const env = defineEnv({
   server: { DATABASE_URL: string().url() },
   client: { NEXT_PUBLIC_API_URL: string().url() },
@@ -127,7 +218,9 @@ const env = defineEnv({
 | Getting Started | [ctroenv.vercel.app/docs/getting-started](https://ctroenv.vercel.app/docs/getting-started) |
 | Core API | [ctroenv.vercel.app/docs/core](https://ctroenv.vercel.app/docs/core) |
 | CLI Guide | [ctroenv.vercel.app/docs/cli](https://ctroenv.vercel.app/docs/cli) |
-| Framework Guides | [ctroenv.vercel.app/docs/node](https://ctroenv.vercel.app/docs/node) |
+| Node.js | [ctroenv.vercel.app/docs/node](https://ctroenv.vercel.app/docs/node) |
+| Vite | [ctroenv.vercel.app/docs/vite](https://ctroenv.vercel.app/docs/vite) |
+| Next.js | [ctroenv.vercel.app/docs/nextjs](https://ctroenv.vercel.app/docs/nextjs) |
 | Migration Guides | [ctroenv.vercel.app/docs/migration](https://ctroenv.vercel.app/docs/migration) |
 
 ## Examples
@@ -140,6 +233,7 @@ Check the [`examples/`](./examples) directory for complete project setups:
 - [Next.js + CtroEnv](./examples/with-nextjs/)
 - [CLI-driven project](./examples/with-cli/)
 - [Monorepo setup](./examples/monorepo/)
+- [GitHub Actions](./examples/github-actions/)
 
 ## Comparison
 
@@ -160,7 +254,7 @@ This project uses:
 
 - **npm workspaces** for the monorepo
 - **Biome** for linting and formatting
-- **Vitest** for testing
+- **Vitest** for testing (v8 coverage, 90%+ thresholds)
 - **tsup** for building
 
 ```bash

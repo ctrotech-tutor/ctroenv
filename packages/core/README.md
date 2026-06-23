@@ -46,10 +46,16 @@ const env = defineEnv({
 
 | Validator | Type | Refinements |
 |---|---|---|
-| `string()` | `string` | `.url()`, `.email()`, `.port()`, `.min()`, `.max()`, `.regex()` |
+| `string()` | `string` | `.url()`, `.email()`, `.port()`, `.hostname()`, `.min()`, `.max()`, `.regex()` |
 | `number()` | `number` | `.int()`, `.positive()`, `.port()`, `.min()`, `.max()` |
 | `boolean()` | `boolean` | (chainable methods only) |
 | `pick([...])` | union literal | (chainable methods only) |
+| `semver()` | `string` | (strict semver, no ranges or `v` prefix) |
+| `ip()` | `string` | (IPv4 or IPv6) |
+| `ipv4()` | `string` | (strict IPv4) |
+| `ipv6()` | `string` | (strict IPv6, no zone index) |
+| `uuid()` | `string` | (RFC 9562 UUID) |
+| `guid()` | `string` | (permissive GUID, case-insensitive) |
 
 ## Chainable Methods
 
@@ -64,6 +70,16 @@ All validators support: `.optional()`, `.default(v)`, `.describe(text)`, `.secre
 | `number()` | Number validator factory (coerces strings) |
 | `boolean()` | Boolean validator factory (coerces true/false/yes/no/on/off/1/0, plus y/n/t/f) |
 | `pick(values)` | Enum validator from string list (throws on empty array) |
+| `semver()` | Strict semver validator (no ranges, no `v` prefix) |
+| `ip()` | IP address validator (accepts IPv4 or IPv6) |
+| `ipv4()` | IPv4 address validator |
+| `ipv6()` | IPv6 address validator (rejects zone indices) |
+| `uuid()` | UUID validator (RFC 9562, any version) |
+| `guid()` | Permissive GUID validator (case-insensitive, with/without braces) |
+| `createValidator(parse, opts)` | Build a custom validator from scratch |
+| `applyChain(base)` | Add chainable methods (`.optional()`, etc.) to a custom validator |
+| `parseOk(value)` | Signal successful parsing in a custom validator |
+| `singleError(error)` | Signal a single validation error |
 | `CtroEnvError` | Error class with all validation errors |
 | `formatErrors(errors)` | Format validation errors for CLI output |
 | `defineSchema(def)` | Define reusable schema fragments |
