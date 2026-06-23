@@ -57,6 +57,11 @@ describe("ip()", () => {
     expect(result.success).toBe(false)
   })
 
+  it("rejects link-local IPv6 with zone index", () => {
+    const result = ip().parse("fe80::1%eth0", { key: "HOST", path: ["HOST"] })
+    expect(result.success).toBe(false)
+  })
+
   it("rejects empty string", () => {
     const result = ip().parse("", { key: "HOST", path: ["HOST"] })
     expect(result.success).toBe(false)

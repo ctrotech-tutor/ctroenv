@@ -69,4 +69,54 @@ describe("defineEnv (Next.js)", () => {
     expect(Object.keys(env)).not.toContain("meta")
     expect(env.meta).toBeDefined()
   })
+
+  it("has trap returns true for meta key", () => {
+    const env = defineEnv(schema)
+    expect("meta" in env).toBe(true)
+  })
+
+  it("has trap returns true for known server key", () => {
+    const env = defineEnv(schema)
+    expect("DATABASE_URL" in env).toBe(true)
+  })
+
+  it("has trap returns true for known client key", () => {
+    const env = defineEnv(schema)
+    expect("NEXT_PUBLIC_API_URL" in env).toBe(true)
+  })
+
+  it("has trap returns false for unknown key", () => {
+    const env = defineEnv(schema)
+    expect("NONEXISTENT" in env).toBe(false)
+  })
+
+  it("ownKeys includes meta", () => {
+    const env = defineEnv(schema)
+    expect(Reflect.ownKeys(env)).toContain("meta")
+  })
+
+  it("getOwnPropertyDescriptor for meta is non-enumerable", () => {
+    const env = defineEnv(schema)
+    const desc = Object.getOwnPropertyDescriptor(env, "meta")
+    expect(desc).toBeDefined()
+    expect(desc?.enumerable).toBe(false)
+  })
+
+  it("getOwnPropertyDescriptor for known server key is enumerable", () => {
+    const env = defineEnv(schema)
+    const desc = Object.getOwnPropertyDescriptor(env, "DATABASE_URL")
+    expect(desc).toBeDefined()
+    expect(desc?.enumerable).toBe(true)
+  })
+
+  it("getOwnPropertyDescriptor for unknown key returns undefined", () => {
+    const env = defineEnv(schema)
+    const desc = Object.getOwnPropertyDescriptor(env, "NONEXISTENT")
+    expect(desc).toBeUndefined()
+  })
+
+  it("returns undefined for missing key access", () => {
+    const env = defineEnv(schema)
+    expect((env as Record<string, unknown>).NONEXISTENT).toBeUndefined()
+  })
 })

@@ -91,5 +91,10 @@ describe("EnvSource", () => {
       const source = detectSource()
       expect(source.get("PATH")).toBeDefined()
     })
+
+    it("returns undefined for missing key in all sources", () => {
+      const source = detectSource()
+      expect(source.get("__CTROENV_UTTERLY_NONEXISTENT__")).toBeUndefined()
+    })
   })
 })

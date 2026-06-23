@@ -134,5 +134,59 @@ describe("number()", () => {
         .parse("15", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
+
+    it("accepts at maximum", () => {
+      const result = number()
+        .max(10)
+        .parse("10", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(true)
+    })
+  })
+
+  it("rejects objects", () => {
+    const result = number().parse({}, { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects empty string", () => {
+    const result = number().parse("", { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
+
+  describe("chain methods propagate base errors", () => {
+    it("int() propagates non-numeric input", () => {
+      const result = number()
+        .int()
+        .parse("abc", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("positive() propagates non-numeric input", () => {
+      const result = number()
+        .positive()
+        .parse("abc", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("port() propagates non-numeric input", () => {
+      const result = number()
+        .port()
+        .parse("abc", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("min() propagates non-numeric input", () => {
+      const result = number()
+        .min(5)
+        .parse("abc", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("max() propagates non-numeric input", () => {
+      const result = number()
+        .max(10)
+        .parse("abc", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 })

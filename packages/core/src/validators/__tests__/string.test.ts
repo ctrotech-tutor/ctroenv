@@ -48,6 +48,12 @@ describe("string()", () => {
       const result = s.parse("file:///etc/passwd", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
+
+    it("propagates base validator failure", () => {
+      const s = string().url()
+      const result = s.parse(123, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 
   describe(".email()", () => {
@@ -62,6 +68,13 @@ describe("string()", () => {
       const result = string()
         .email()
         .parse("not-an-email", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("propagates base validator failure", () => {
+      const result = string()
+        .email()
+        .parse(123, { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
   })
@@ -80,6 +93,13 @@ describe("string()", () => {
         .parse("99999", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
+
+    it("propagates base validator failure", () => {
+      const result = string()
+        .port()
+        .parse(123, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 
   describe(".min()", () => {
@@ -96,6 +116,13 @@ describe("string()", () => {
         .parse("abc", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(true)
     })
+
+    it("propagates base validator failure", () => {
+      const result = string()
+        .min(3)
+        .parse(123, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 
   describe(".max()", () => {
@@ -103,6 +130,13 @@ describe("string()", () => {
       const result = string()
         .max(3)
         .parse("abcdef", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("propagates base validator failure", () => {
+      const result = string()
+        .max(3)
+        .parse(123, { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
   })
@@ -119,6 +153,13 @@ describe("string()", () => {
       const result = string()
         .regex(/^api_/)
         .parse("secret_key", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("propagates base validator failure", () => {
+      const result = string()
+        .regex(/^api_/)
+        .parse(123, { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
   })
@@ -191,6 +232,29 @@ describe("string()", () => {
       const result = string()
         .hostname()
         .parse("bad-.example.com", { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects hostname too long (>253 chars)", () => {
+      const long = "a".repeat(254)
+      const result = string()
+        .hostname()
+        .parse(long, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects label too long (>63 chars)", () => {
+      const long = `${"a".repeat(64)}.com`
+      const result = string()
+        .hostname()
+        .parse(long, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
+
+    it("rejects label with invalid characters", () => {
+      const result = string()
+        .hostname()
+        .parse("a_b.example.com", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
   })

@@ -110,5 +110,11 @@ describe("chainable methods", () => {
       const result = v.parse("secret", { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
     })
+
+    it("propagates base validator failure", () => {
+      const v = string().validate(() => undefined)
+      const result = v.parse(123, { key: "TEST", path: ["TEST"] })
+      expect(result.success).toBe(false)
+    })
   })
 })

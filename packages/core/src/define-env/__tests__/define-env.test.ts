@@ -327,5 +327,30 @@ describe("defineEnv()", () => {
       expect(json.SECRET).toBe("********")
       expect(json.meta).toBeUndefined()
     })
+
+    it("has operator works for both meta and values", () => {
+      const env = defineEnv(
+        { PORT: number().default(3000), KEY: string().secret() },
+        { source: { KEY: "val" } },
+      )
+      expect("meta" in env).toBe(true)
+      expect("PORT" in env).toBe(true)
+      expect("NONEXISTENT" in env).toBe(false)
+    })
+
+    it("set trap throws TypeError", () => {
+      const env = defineEnv({ KEY: string() }, { source: { KEY: "val" } })
+      expect(() => {
+        ;(env as Record<string, unknown>).KEY = "newval"
+      }).toThrow("Cannot assign to read-only property")
+    })
+
+    it("deleteProperty trap throws TypeError", () => {
+      const env = defineEnv({ KEY: string() }, { source: { KEY: "val" } })
+      expect(() => {
+        // @ts-expect-error intentionally testing delete
+        delete env.KEY
+      }).toThrow("Cannot delete property of frozen object")
+    })
   })
 })

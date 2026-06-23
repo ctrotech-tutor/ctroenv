@@ -99,4 +99,9 @@ describe("boolean()", () => {
     const result = boolean().parse("maybe", { key: "TEST", path: ["TEST"] })
     expect(result.success).toBe(false)
   })
+
+  it("rejects numbers other than 0 or 1", () => {
+    const result = boolean().parse(2, { key: "TEST", path: ["TEST"] })
+    expect(result.success).toBe(false)
+  })
 })

@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "start": "tsx src/index.ts",
     "validate": "ctroenv validate --source .env",
     "validate:watch": "ctroenv validate --watch --source .env",
     "generate": "ctroenv generate",

@@ -66,4 +66,71 @@ describe("ctroenvPlugin", () => {
     const plugin = ctroenvPlugin({ schema: validSchema })
     expect(plugin.name).toBe("ctroenv")
   })
+
+  it("throws on validation error with default failOnError (true)", async () => {
+    const plugin = ctroenvPlugin({
+      schema: {
+        REQUIRED: string(),
+      },
+    })
+    const ctx = mockPluginContext()
+    await expect(plugin.buildStart?.call(ctx as never)).rejects.toThrow()
+    expect(ctx.errors.length).toBeGreaterThan(0)
+  })
+
+  it("handles missing schema file gracefully", async () => {
+    const plugin = ctroenvPlugin({ schema: resolve(TMP, "nonexistent-schema.ts") })
+    const ctx = mockPluginContext()
+    await expect(plugin.buildStart?.call(ctx as never)).rejects.toThrow()
+  })
+
+  it("handles runtime error in schema module gracefully", async () => {
+    const schemaPath = resolve(TMP, "broken-schema.ts")
+    const { writeFileSync } = await import("node:fs")
+    writeFileSync(schemaPath, `throw new Error("oops")`, "utf-8")
+    const plugin = ctroenvPlugin({ schema: schemaPath })
+    const ctx = mockPluginContext()
+    await expect(plugin.buildStart?.call(ctx as never)).rejects.toThrow()
+  })
+
+  it("loads schema from file path and validates", async () => {
+    const schemaPath = resolve(TMP, "valid-schema.ts")
+    const { writeFileSync } = await import("node:fs")
+    writeFileSync(
+      schemaPath,
+      `import { string, number } from "@ctroenv/core";
+export const schema = { PORT: number().port().default(3000), NODE_ENV: string() };`,
+      "utf-8",
+    )
+    process.env.NODE_ENV = "test"
+    const plugin = ctroenvPlugin({ schema: schemaPath })
+    const ctx = mockPluginContext()
+    await plugin.buildStart?.call(ctx as never)
+    expect(ctx.warnings.length).toBeGreaterThan(0)
+  })
+
+  it("loads schema from file exporting env instead of schema", async () => {
+    const schemaPath = resolve(TMP, "env-export-schema.ts")
+    const { writeFileSync } = await import("node:fs")
+    writeFileSync(
+      schemaPath,
+      `import { string, number } from "@ctroenv/core";
+export const env = { PORT: number().port().default(3000) };`,
+      "utf-8",
+    )
+    const plugin = ctroenvPlugin({ schema: schemaPath })
+    const ctx = mockPluginContext()
+    await plugin.buildStart?.call(ctx as never)
+    expect(ctx.warnings.length).toBeGreaterThan(0)
+  })
+
+  it("accepts maskWith option", async () => {
+    const plugin = ctroenvPlugin({
+      schema: validSchema,
+      maskWith: "***SECRET***",
+    })
+    const ctx = mockPluginContext()
+    await plugin.buildStart?.call(ctx as never)
+    expect(ctx.warnings.length).toBeGreaterThan(0)
+  })
 })

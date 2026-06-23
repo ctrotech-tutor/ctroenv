@@ -45,4 +45,8 @@ describe("pick()", () => {
     })
     expect(result.success).toBe(true)
   })
+
+  it("throws TypeError for empty values array", () => {
+    expect(() => pick([])).toThrow(TypeError)
+  })
 })

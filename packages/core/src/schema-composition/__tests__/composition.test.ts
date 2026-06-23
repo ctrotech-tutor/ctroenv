@@ -68,4 +68,33 @@ describe("extendSchema()", () => {
     expect(merged.B).toBeDefined()
     expect(merged.C).toBeDefined()
   })
+
+  it("warns in dev mode when extension overrides base key", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const prev = process.env.NODE_ENV
+    process.env.NODE_ENV = "development"
+
+    const base = defineSchema({ PORT: number().default(3000) })
+    extendSchema(base, { PORT: number().default(4000) })
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("PORT"))
+
+    warn.mockRestore()
+    process.env.NODE_ENV = prev
+  })
+
+  it("does not warn in production on conflict", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const prev = process.env.NODE_ENV
+    process.env.NODE_ENV = "production"
+
+    const base = defineSchema({ PORT: number().default(3000) })
+    extendSchema(base, { PORT: number().default(4000) })
+
+    expect(warn).not.toHaveBeenCalled()
+
+    warn.mockRestore()
+    process.env.NODE_ENV = prev
+  })
 })

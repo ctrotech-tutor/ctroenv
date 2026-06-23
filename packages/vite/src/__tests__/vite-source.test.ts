@@ -8,6 +8,11 @@ describe("viteSource", () => {
     delete process.env[KEY]
   })
 
+  it("reads from import.meta.env when key exists", () => {
+    const source = viteSource()
+    expect(typeof source.get("MODE")).toBe("string")
+  })
+
   it("falls back to process.env when import.meta.env unavailable", () => {
     process.env[KEY] = "from-process"
     const source = viteSource()
