@@ -1,6 +1,6 @@
 # Documentation Site Update Plan
 
-**Reference:** Phase 1 (`phase/01-bug-fixes`, `6067cf1`) + Phase 2 (`phase/02-client-server`, `4c88db0`)
+**Reference:** Phase 1 (`phase/01-bug-fixes`, `6067cf1`) + Phase 2 (`phase/02-client-server`, `4c88db0`) + Phase 3 (`phase/03-cross-runtime`, `9ebf518`) + Phase 4 (`phase/04-cli`, `38fee36`)
 **Target docs:** `apps/docs/content/docs/` (MDX files)
 **Also affected:** `.opencode/skills/ctroenv/SKILL.md` (agent guide)
 
@@ -231,6 +231,63 @@ If desired, create `content/blog/v1-5-0.mdx` covering:
 - Native .env file support (opt-in)
 - Architectural decisions (dropped auto-native, workers naming)
 
+### 17. `docs/cli/commands.mdx` (or similar) — Phase 4 CLI updates
+
+**Location:** In the `validate` and `check` command sections.
+
+#### validate — JSON output fields
+
+Add note that JSON output now includes `version` and `timestamp`:
+
+```json
+{
+  "version": "1.6.0",
+  "valid": true,
+  "source": "process.env",
+  "total": 5,
+  "errors": [],
+  "timestamp": "2026-06-22T..."
+}
+```
+
+#### check — JSON summary block
+
+Add note about the `summary` object:
+
+```json
+{
+  "summary": {
+    "missing": 1,
+    "unused": 2,
+    "matched": 7
+  }
+}
+```
+
+#### check — --warn-unknown flag
+
+Document the new `--warn-unknown` flag:
+
+> `--warn-unknown` — Scans the env source for keys NOT in the schema. Unknown keys with close matches (Levenshtein distance ≤ 2) show a suggestion: `DATABASE__URL` → `did you mean DATABASE_URL?`
+
+#### Exit codes reference
+
+Add a table of exit codes somewhere in the CLI docs:
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success — all variables valid |
+| 1 | Validation error — missing, invalid, or mismatched vars |
+| 2 | Configuration error — schema not found, config parse failed |
+
+### 18. (Optional) New Blog Post — v1.6.0
+
+If desired, create `content/blog/v1-6-0.mdx` covering:
+- JSON output improvements (version, timestamp, summary block)
+- `--warn-unknown` flag with typo detection
+- GitHub Actions CI integration examples
+- Exit codes documented
+
 ---
 
 ## Effort Estimate
@@ -246,12 +303,14 @@ If desired, create `content/blog/v1-5-0.mdx` covering:
 | `docs/core/schema-composition.mdx` | Edit (new section) | 10 min |
 | `docs/node.mdx` | Edit (native option note) | 5 min |
 | `docs/nextjs.mdx` | Edit (imports + type references) | 15 min |
+| `docs/cli/commands.mdx` (or similar) | Edit (3 sections) | 15 min |
 | `SKILL.md` | Review + edit | 15 min |
 | `README.md` | Review (likely no changes) | 5 min |
 | New blog post v1.3.0 | Write new MDX | 30 min |
 | New blog post v1.4.0 | Write new MDX | 20 min |
 | New blog post v1.5.0 | Write new MDX | 20 min |
-| **Total** | | **~3 hours** |
+| New blog post v1.6.0 | Write new MDX | 20 min |
+| **Total** | | **~3.5 hours** |
 
 ---
 
