@@ -26,28 +26,36 @@ const env = defineEnv(schema, {
 ## API
 
 | Function | Description |
-|---|---|
+|----------|-------------|
 | `loadEnv(opts?)` | Load `.env` files and return an `EnvSource` |
 | `nodeSource()` | Create an `EnvSource` from `process.env` |
 | `parseEnvFile(content)` | Parse a `.env` file string into key-value pairs |
 
-### loadEnv
+### `loadEnv`
 
 ```ts
-loadEnv({ path?: string, override?: boolean, system?: boolean }): EnvSource
+loadEnv({ path?, encoding?, override?, system?, native? }): EnvSource
 ```
 
-Reads `.env`, `.env.{NODE_ENV}`, and `.env.local` files in priority order.
+Reads `.env`, `.env.{NODE_ENV}`, and `.env.local` files in priority order. Returns an `EnvSource` compatible with `defineEnv()`.
 
-### nodeSource
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `path` | `string` | `process.cwd()` | Directory to search for `.env` files |
+| `encoding` | `BufferEncoding` | `"utf-8"` | File encoding |
+| `override` | `boolean` | `false` | Prefer file values over `process.env` |
+| `system` | `boolean` | `false` | Fall back to `process.env` for missing keys |
+| `native` | `boolean` | `false` | Use Node.js built-in `process.loadEnvFile()` when available (Node 21.7+) |
+
+### `nodeSource`
 
 ```ts
 nodeSource(): EnvSource
 ```
 
-Simple `process.env` wrapper.
+Simple `process.env` wrapper. Use when you don't need `.env` file loading.
 
-### parseEnvFile
+### `parseEnvFile`
 
 ```ts
 parseEnvFile(content: string): Record<string, string>

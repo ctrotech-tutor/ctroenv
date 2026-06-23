@@ -5,17 +5,19 @@
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@ctroenv/core)](https://bundlephobia.com/package/@ctroenv/core)
 [![license](https://img.shields.io/npm/l/@ctroenv/core)](https://github.com/ctrotech-tutor/ctroenv/blob/main/LICENSE)
 
-Define, validate, and infer types for environment variables. Zero runtime dependencies.
+Define, validate, and infer types for environment variables. **Zero runtime dependencies** — 4 KB gzip.
 
 ## Features
 
-- **Zero dependencies** — core package has no runtime deps
-- **Full TypeScript inference** — exact types inferred from your schema
-- **Rich error messages** — grouped, with suggestions, colorized
+- **Zero dependencies** — no runtime deps, not even as peer dependencies
+- **Full TypeScript inference** — exact literal types inferred from your schema
+- **Rich error messages** — grouped by category with actionable suggestions
 - **Chainable API** — `string().url().min(1).optional()`
+- **Secret masking** — sensitive values masked in logs and console output
+- **Schema composition** — reusable schemas with `defineSchema` / `extendSchema`
+- **Custom validators** — build your own with `createValidator` / `applyChain`
 - **Framework adapters** — Node, Vite, Next.js (separate packages)
 - **CLI tooling** — validate, generate, check, docs, init (separate package)
-- **Secret masking** — mask sensitive values in logs and output
 
 ## Installation
 
@@ -35,57 +37,110 @@ const env = defineEnv({
   JWT_SECRET: string().secret().min(32),
 })
 
-// TypeScript infers:
-//   env.DATABASE_URL → string
-//   env.PORT → number
-//   env.NODE_ENV → "development" | "staging" | "production"
-//   env.JWT_SECRET → string
+// TypeScript infers exact types:
+env.DATABASE_URL // string
+env.PORT         // number
+env.NODE_ENV     // "development" | "staging" | "production"
 ```
 
 ## Validators
 
 | Validator | Type | Refinements |
-|---|---|---|
+|-----------|------|-------------|
 | `string()` | `string` | `.url()`, `.email()`, `.port()`, `.hostname()`, `.min()`, `.max()`, `.regex()` |
 | `number()` | `number` | `.int()`, `.positive()`, `.port()`, `.min()`, `.max()` |
-| `boolean()` | `boolean` | (chainable methods only) |
-| `pick([...])` | union literal | (chainable methods only) |
-| `semver()` | `string` | (strict semver, no ranges or `v` prefix) |
-| `ip()` | `string` | (IPv4 or IPv6) |
-| `ipv4()` | `string` | (strict IPv4) |
-| `ipv6()` | `string` | (strict IPv6, no zone index) |
-| `uuid()` | `string` | (RFC 9562 UUID) |
-| `guid()` | `string` | (permissive GUID, case-insensitive) |
+| `boolean()` | `boolean` | Coerces `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0`, `"y"`/`"n"`, `"t"`/`"f"` |
+| `pick([...])` | union literal | Enum validation from a string list |
+| `semver()` | `string` | Strict semver (no ranges, no `v` prefix) |
+| `ip()` | `string` | Accepts IPv4 or IPv6 |
+| `ipv4()` | `string` | Strict IPv4 |
+| `ipv6()` | `string` | Strict IPv6 (rejects zone indices like `%eth0`) |
+| `uuid()` | `string` | RFC 9562 UUID (any version, lowercase) |
+| `guid()` | `string` | Permissive GUID (case-insensitive, with/without braces) |
 
-## Chainable Methods
+### Chainable Methods
 
-All validators support: `.optional()`, `.default(v)`, `.describe(text)`, `.secret()`, `.validate(fn)`
+Every validator supports: `.optional()`, `.default(v)`, `.describe(text)`, `.secret()`, `.validate(fn)`
+
+> **Chain order matters:** Validator-specific refinements (`.url()`, `.min()`, `.email()`, etc.) must come **before** `.secret()`, `.optional()`, or `.describe()`. Reason: `.secret()` returns a generic wrapper that loses type-specific methods.
+
+```ts
+// ✅ Correct
+string().url().min(1).secret()
+
+// ❌ Wrong — .min() won't exist
+string().secret().url().min(1)
+```
 
 ## API
 
-| Function | Description |
-|---|---|
-| `defineEnv(schema, opts?)` | Validate and return typed env object |
-| `string()` | String validator factory |
-| `number()` | Number validator factory (coerces strings) |
-| `boolean()` | Boolean validator factory (coerces true/false/yes/no/on/off/1/0, plus y/n/t/f) |
-| `pick(values)` | Enum validator from string list (throws on empty array) |
-| `semver()` | Strict semver validator (no ranges, no `v` prefix) |
-| `ip()` | IP address validator (accepts IPv4 or IPv6) |
-| `ipv4()` | IPv4 address validator |
-| `ipv6()` | IPv6 address validator (rejects zone indices) |
-| `uuid()` | UUID validator (RFC 9562, any version) |
-| `guid()` | Permissive GUID validator (case-insensitive, with/without braces) |
-| `createValidator(parse, opts)` | Build a custom validator from scratch |
-| `applyChain(base)` | Add chainable methods (`.optional()`, etc.) to a custom validator |
-| `parseOk(value)` | Signal successful parsing in a custom validator |
-| `singleError(error)` | Signal a single validation error |
-| `CtroEnvError` | Error class with all validation errors |
-| `formatErrors(errors)` | Format validation errors for CLI output |
-| `defineSchema(def)` | Define reusable schema fragments |
-| `extendSchema(base, ext)` | Extend a base schema with additional fields |
+### `defineEnv(schema, opts?)`
 
-## Error Handling
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `source` | `EnvSource \| Record<string, string \| undefined>` | Auto-detected | Where to read env values from |
+| `prefix` | `string` | — | Prepended to key lookups in the source |
+| `maskWith` | `string` | `"********"` | Custom mask string for secret values |
+
+```ts
+const env = defineEnv(
+  { DATABASE_URL: string().url() },
+  { source: loadEnv(), prefix: "MY_APP_", maskWith: "***" },
+)
+```
+
+### Source Functions
+
+| Function | Description |
+|----------|-------------|
+| `detectSource()` | Auto-detect source (process.env, import.meta.env, etc.) |
+| `objectSource(obj)` | Create an `EnvSource` from a plain object |
+| `workersSource()` | Create an `EnvSource` compatible with Cloudflare Workers |
+
+### Schema Composition
+
+```ts
+import { defineSchema, extendSchema } from "@ctroenv/core"
+
+const base = defineSchema({
+  DATABASE_URL: string().url(),
+  PORT: number().port().default(3000),
+})
+
+const schema = extendSchema(base, {
+  JWT_SECRET: string().secret(),
+})
+
+const env = defineEnv(schema)
+```
+
+### Custom Validators
+
+```ts
+import { createValidator, applyChain, parseOk, singleError, errInvalid, errType } from "@ctroenv/core"
+
+function semver() {
+  const base = createValidator<string>(
+    (input, ctx) =>
+      typeof input !== "string"
+        ? singleError(errType(ctx.key, typeof input, "semver"))
+        : /^\d+\.\d+\.\d+$/.test(input)
+          ? parseOk(input)
+          : singleError(errInvalid(ctx.key, input, "not valid semver")),
+    { typeLabel: "semver" },
+  )
+  return applyChain(base)
+}
+```
+
+### Error Handling
+
+| Class / Function | Description |
+|-----------------|-------------|
+| `CtroEnvError` | Error class containing all validation errors |
+| `formatErrors(errors)` | Format errors for CLI output (grouped, colorized) |
+| `ValidationError` | Single validation error: `{ key, message, code }` |
+| `ErrorCode` | Enum: `missing_required`, `type_mismatch`, `invalid_value`, `validation_failed` |
 
 ```ts
 import { CtroEnvError, formatErrors } from "@ctroenv/core"
@@ -98,6 +153,21 @@ try {
   }
 }
 ```
+
+### Types
+
+| Type | Description |
+|------|-------------|
+| `SchemaDefinition` | Object mapping keys to validators |
+| `Validator<T>` | Generic validator type with metadata |
+| `EnvResult<T>` | Read-only env object with inferred types |
+| `EnvMeta` | Metadata accessor: `.get()`, `.has()`, `.keys()`, `.toJSON()` |
+| `EnvSource` | Source interface: `{ get(key: string): string \| undefined }` |
+| `ClientServerSchema` | `{ client: SchemaDefinition, server: SchemaDefinition }` |
+| `InferredClientServerEnv<T>` | Merged inferred type from client/server schemas |
+| `DefineEnvOptions` | Options for `defineEnv()` |
+| `ParseResult` | `{ ok: true, value: T } \| { ok: false, errors: ValidationError[] }` |
+| `ParseContext` | Context passed to validator parse functions |
 
 ## Documentation
 
