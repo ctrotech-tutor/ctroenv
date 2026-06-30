@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { ExitCode } from "../exit-codes"
-import { divider, error, hint, success } from "../utils/output"
 import { generateSchemaFromEnv } from "../utils/env-to-schema"
+import { divider, error, hint, success } from "../utils/output"
 
 interface InitOptions {
   format: "ts" | "js" | "json"
@@ -113,7 +113,9 @@ export async function initCommand(options: InitOptions): Promise<number> {
       writeFileSync(schemaPath, code, "utf-8")
       process.stdout.write(`${success(`src/env.ts generated from ${options.fromEnv}`)}\n`)
       if (fileCount > 0) {
-        process.stdout.write(`${hint(`${fileCount} environment variable${fileCount === 1 ? "" : "s"} mapped to schema validators.\n`)}`)
+        process.stdout.write(
+          `${hint(`${fileCount} environment variable${fileCount === 1 ? "" : "s"} mapped to schema validators.\n`)}`,
+        )
       }
       process.stdout.write(`${divider()}\n`)
       process.stdout.write(`${hint("Review the schema and adjust validator types as needed.")}\n`)

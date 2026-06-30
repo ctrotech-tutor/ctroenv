@@ -9,7 +9,7 @@
       "!!**/.next",
       "!!**/.vercel",
       "!!**/dist",
-      "!!coverage",
+      "!!**/coverage",
       "!!examples",
       "!!.opencode/skills/ctroenv/examples"
     ]

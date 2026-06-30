@@ -13,12 +13,12 @@ This skill provides deep knowledge of the CtroEnv library for AI agents. Load it
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@ctroenv/core` | 1.4.0 | Schema engine, validators, `defineEnv()`, errors (zero deps) |
-| `@ctroenv/cli` | 1.2.2 | CLI tooling (validate, generate, check, docs, init) |
+| `@ctroenv/core` | 1.5.0 | Schema engine, validators, `defineEnv()`, `watchEnv()`, errors (zero deps) |
+| `@ctroenv/cli` | 1.3.0 | CLI tooling (validate, generate, check, docs, init, `--from-env`) |
 | `@ctroenv/node` | 1.1.2 | Node.js adapter (`loadEnv()`, `nodeSource()`) |
 | `@ctroenv/vite` | 1.0.4 | Vite adapter (`viteSource()`, `ctroenvPlugin()`) |
 | `@ctroenv/nextjs` | 1.2.1 | Next.js adapter (server/client split) |
-| `@ctroenv/shared` | 1.0.4 | Internal shared utilities |
+| `@ctroenv/shared` | 1.1.0 | Internal shared utilities (logger, `colorize`, `formatLevel`) |
 
 ## Complete API Reference
 

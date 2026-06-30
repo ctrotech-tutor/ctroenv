@@ -1,7 +1,7 @@
 import { CtroEnvError } from "../errors/ctroenv-error"
 import type { EnvResult, SchemaDefinition } from "../types"
-import { detectSource, type EnvSource, objectSource } from "./source"
 import { createMaskedEnv } from "./mask"
+import { detectSource, type EnvSource, objectSource } from "./source"
 import { walkSchema } from "./validate"
 
 export interface DefineEnvOptions {
@@ -34,7 +34,12 @@ export function defineEnv<T extends SchemaDefinition>(
       .map(([k]) => k),
   )
 
-  return createMaskedEnv(value, secretKeys, MASKED_DEFAULT, opts?.maskWith) as unknown as EnvResult<T>
+  return createMaskedEnv(
+    value,
+    secretKeys,
+    MASKED_DEFAULT,
+    opts?.maskWith,
+  ) as unknown as EnvResult<T>
 }
 
 function isRecordSource(

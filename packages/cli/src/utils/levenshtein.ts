@@ -11,14 +11,14 @@ export function levenshtein(a: string, b: string): number {
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1
       dp[i * stride + j] = Math.min(
-        dp[(i - 1) * stride + j]! + 1,
-        dp[i * stride + j - 1]! + 1,
-        dp[(i - 1) * stride + j - 1]! + cost,
+        (dp[(i - 1) * stride + j] ?? 0) + 1,
+        (dp[i * stride + j - 1] ?? 0) + 1,
+        (dp[(i - 1) * stride + j - 1] ?? 0) + cost,
       )
     }
   }
 
-  return dp[m * stride + n]!
+  return dp[m * stride + n] ?? 0
 }
 
 export function suggestKey(

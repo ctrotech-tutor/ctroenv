@@ -4,9 +4,17 @@ export type { EnvSource } from "./define-env/source"
 export { detectSource, objectSource } from "./define-env/source"
 export { workersSource } from "./define-env/workers"
 export type { ErrorCode as ErrorCodeType } from "./errors"
-export { CtroEnvError, ErrorCode, errInvalid, errMissing, errType, errWrap, formatErrors, ValidationError } from "./errors"
+export {
+  CtroEnvError,
+  ErrorCode,
+  errInvalid,
+  errMissing,
+  errType,
+  errWrap,
+  formatErrors,
+  ValidationError,
+} from "./errors"
 export type { Schema } from "./schema-composition"
-export { parseFail, parseOk, singleError } from "./types"
 export { defineSchema, extendSchema } from "./schema-composition"
 export type {
   ClientServerSchema,
@@ -20,6 +28,7 @@ export type {
   Validator,
   ValidatorMetadata,
 } from "./types"
+export { parseFail, parseOk, singleError } from "./types"
 export type {
   BooleanValidator,
   ChainableMethods,
@@ -45,5 +54,5 @@ export {
   uuid,
 } from "./validators"
 export { email, integer, max, min, port, regex, url } from "./validators/refinements"
-export { watchEnv } from "./watch-env"
 export type { WatchEnvOptions, WatchEnvResult } from "./watch-env"
+export { watchEnv } from "./watch-env"

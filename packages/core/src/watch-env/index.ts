@@ -1,9 +1,9 @@
-import { CtroEnvError } from "../errors/ctroenv-error"
-import type { ValidationError } from "../errors/validation-error"
+import type { DefineEnvOptions } from "../define-env/index"
 import { createMaskedEnv } from "../define-env/mask"
 import { detectSource, type EnvSource, objectSource } from "../define-env/source"
 import { walkSchema } from "../define-env/validate"
-import type { DefineEnvOptions } from "../define-env/index"
+import { CtroEnvError } from "../errors/ctroenv-error"
+import type { ValidationError } from "../errors/validation-error"
 import type { EnvResult, SchemaDefinition } from "../types"
 
 export interface WatchEnvOptions extends DefineEnvOptions {

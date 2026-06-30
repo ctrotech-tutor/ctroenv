@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/shared",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Shared utilities for CtroEnv — logger, type helpers, and cross-package tooling",
   "type": "module",
   "exports": {

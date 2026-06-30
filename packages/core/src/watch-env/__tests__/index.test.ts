@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { string, number, boolean } from "../../validators"
 import type { EnvSource } from "../../define-env/source"
+import { boolean, number, string } from "../../validators"
 import { watchEnv } from "../index"
 
 afterEach(() => {
@@ -9,43 +9,31 @@ afterEach(() => {
 
 describe("watchEnv()", () => {
   it("returns typed object for valid env", () => {
-    const env = watchEnv(
-      { KEY: string() },
-      { source: { KEY: "value" }, pollInterval: 500 },
-    )
+    const env = watchEnv({ KEY: string() }, { source: { KEY: "value" }, pollInterval: 500 })
     expect(env.KEY).toBe("value")
     env.unwatch()
   })
 
   it("throws CtroEnvError on missing required", () => {
-    expect(() =>
-      watchEnv({ KEY: string() }, { source: {}, pollInterval: 500 }),
-    ).toThrow("Missing required")
+    expect(() => watchEnv({ KEY: string() }, { source: {}, pollInterval: 500 })).toThrow(
+      "Missing required",
+    )
   })
 
   it("applies defaults for missing optional vars", () => {
-    const env = watchEnv(
-      { PORT: number().default(3000) },
-      { source: {}, pollInterval: 500 },
-    )
+    const env = watchEnv({ PORT: number().default(3000) }, { source: {}, pollInterval: 500 })
     expect(env.PORT).toBe(3000)
     env.unwatch()
   })
 
   it("allows undefined for optional vars without default", () => {
-    const env = watchEnv(
-      { OPTIONAL: string().optional() },
-      { source: {}, pollInterval: 500 },
-    )
+    const env = watchEnv({ OPTIONAL: string().optional() }, { source: {}, pollInterval: 500 })
     expect(env.OPTIONAL).toBeUndefined()
     env.unwatch()
   })
 
   it("prevents mutation", () => {
-    const env = watchEnv(
-      { KEY: string() },
-      { source: { KEY: "value" }, pollInterval: 500 },
-    )
+    const env = watchEnv({ KEY: string() }, { source: { KEY: "value" }, pollInterval: 500 })
     expect(() => {
       ;(env as Record<string, unknown>).KEY = "new"
     }).toThrow(TypeError)
@@ -160,10 +148,7 @@ describe("watchEnv()", () => {
     vi.useFakeTimers()
     const source: Record<string, string | undefined> = { KEY: "https://example.com" }
 
-    const env = watchEnv(
-      { KEY: string().url() },
-      { source, pollInterval: 100 },
-    )
+    const env = watchEnv({ KEY: string().url() }, { source, pollInterval: 100 })
 
     expect(env.KEY).toBe("https://example.com")
 
@@ -178,10 +163,7 @@ describe("watchEnv()", () => {
     vi.useFakeTimers()
     const source: Record<string, string | undefined> = { KEY: "initial" }
 
-    const env = watchEnv(
-      { KEY: string() },
-      { source, pollInterval: 100 },
-    )
+    const env = watchEnv({ KEY: string() }, { source, pollInterval: 100 })
 
     env.unwatch()
 
@@ -195,10 +177,7 @@ describe("watchEnv()", () => {
     vi.useFakeTimers()
     const source: Record<string, string | undefined> = { KEY: "stable" }
 
-    const env = watchEnv(
-      { KEY: string() },
-      { source, pollInterval: 100 },
-    )
+    const env = watchEnv({ KEY: string() }, { source, pollInterval: 100 })
 
     vi.advanceTimersByTime(1000)
     expect(env.KEY).toBe("stable")
@@ -206,19 +185,13 @@ describe("watchEnv()", () => {
   })
 
   it("coerces string to number", () => {
-    const env = watchEnv(
-      { PORT: number() },
-      { source: { PORT: "8080" }, pollInterval: 500 },
-    )
+    const env = watchEnv({ PORT: number() }, { source: { PORT: "8080" }, pollInterval: 500 })
     expect(env.PORT).toBe(8080)
     env.unwatch()
   })
 
   it("coerces string to boolean", () => {
-    const env = watchEnv(
-      { DEBUG: boolean() },
-      { source: { DEBUG: "true" }, pollInterval: 500 },
-    )
+    const env = watchEnv({ DEBUG: boolean() }, { source: { DEBUG: "true" }, pollInterval: 500 })
     expect(env.DEBUG).toBe(true)
     env.unwatch()
   })
@@ -229,10 +202,7 @@ describe("watchEnv()", () => {
         return key === "CUSTOM" ? "value" : undefined
       },
     }
-    const env = watchEnv(
-      { CUSTOM: string() },
-      { source: customSource, pollInterval: 500 },
-    )
+    const env = watchEnv({ CUSTOM: string() }, { source: customSource, pollInterval: 500 })
     expect(env.CUSTOM).toBe("value")
     env.unwatch()
   })

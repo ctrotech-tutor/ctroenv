@@ -51,8 +51,10 @@ function parseEnvFile(filePath: string): { vars: EnvVar[]; errors: string[] } {
     const key = trimmed.slice(0, eqIndex).trim()
     let value = trimmed.slice(eqIndex + 1).trim()
 
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1)
     }
 
@@ -67,11 +69,41 @@ function parseEnvFile(filePath: string): { vars: EnvVar[]; errors: string[] } {
 
 function isReservedWord(word: string): boolean {
   const reserved = new Set([
-    "break", "case", "catch", "class", "const", "continue", "debugger",
-    "default", "delete", "do", "else", "export", "extends", "false",
-    "finally", "for", "function", "if", "import", "in", "instanceof",
-    "new", "null", "return", "super", "switch", "this", "throw", "true",
-    "try", "typeof", "var", "void", "while", "with",
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "false",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "null",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
   ])
   return reserved.has(word)
 }

@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/cli",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "CLI tooling for CtroEnv — validate, generate, check, and document environment variables",
   "type": "module",
   "exports": {
