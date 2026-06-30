@@ -63,6 +63,19 @@ console.log(env.PORT) // number — TypeScript knows this
 
 > **Zero runtime dependencies** across all packages. The `@ctroenv/cli` package bundles `commander`, `dotenv`, `jiti`, `chokidar`, and `picocolors` for CLI operations — all other packages remain dependency-free.
 
+### Reactive Validation
+
+For long-running processes, use `watchEnv()` to re-validate when the source changes:
+
+```ts
+import { watchEnv, string, number } from "@ctroenv/core"
+
+const env = watchEnv(
+  { DATABASE_URL: string().url(), PORT: number().port().default(3000) },
+  { pollInterval: 1000, onChange: (key, old, next) => console.log(`${key}: ${old} -> ${next}`) },
+)
+```
+
 ## Installation
 
 ```bash
@@ -144,14 +157,17 @@ const schema = extendSchema(base, {
 ### Custom Validators
 
 ```ts
-import { createValidator, applyChain, parseOk, singleError } from "@ctroenv/core"
+import { createValidator, applyChain, parseOk, singleError, errInvalid, errType } from "@ctroenv/core"
 
 function semver() {
   const base = createValidator<string>(
-    (input, ctx) =>
-      /^\d+\.\d+\.\d+$/.test(input)
-        ? parseOk(input)
-        : singleError({ key: ctx.key, message: "not valid semver", code: "invalid_value" }),
+    (input, ctx) => {
+      if (typeof input !== "string")
+        return singleError(errType(ctx.key, typeof input, "semver"))
+      if (!/^\d+\.\d+\.\d+$/.test(input))
+        return singleError(errInvalid(ctx.key, input, "not a valid semver"))
+      return parseOk(input)
+    },
     { typeLabel: "semver" },
   )
   return applyChain(base)
@@ -181,6 +197,9 @@ ctroenv docs
 
 # Scaffold a new project
 ctroenv init
+
+# Generate schema stub from .env file
+ctroenv init --from-env .env.local
 ```
 
 ## Framework Adapters

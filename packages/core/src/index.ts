@@ -45,3 +45,5 @@ export {
   uuid,
 } from "./validators"
 export { email, integer, max, min, port, regex, url } from "./validators/refinements"
+export { watchEnv } from "./watch-env"
+export type { WatchEnvOptions, WatchEnvResult } from "./watch-env"

@@ -89,13 +89,37 @@ const env = defineEnv(
 )
 ```
 
+### `watchEnv(schema, opts?)`
+
+Re-validates environment variables when the source changes. Useful for long-running processes (servers, CLIs, watchers).
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `source` | `EnvSource` | Auto-detected | Env source to watch |
+| `pollInterval` | `number` | `2000` | Poll interval in ms |
+| `onChange` | `(key, oldVal, nextVal) => void` | — | Called when a value changes |
+| `signal` | `AbortSignal` | — | Stop watching on abort |
+
+```ts
+import { watchEnv, string, number } from "@ctroenv/core"
+
+const env = watchEnv({
+  DATABASE_URL: string().url(),
+  PORT: number().port().default(3000),
+}, {
+  onChange: (key, old, next) => console.log(`${key} changed`),
+})
+
+// env refreshes automatically when source changes
+```
+
 ### Source Functions
 
 | Function | Description |
 |----------|-------------|
 | `detectSource()` | Auto-detect source (process.env, import.meta.env, etc.) |
 | `objectSource(obj)` | Create an `EnvSource` from a plain object |
-| `workersSource()` | Create an `EnvSource` compatible with Cloudflare Workers |
+| `workersSource(env)` | Create an `EnvSource` from a Cloudflare Workers env binding |
 
 ### Schema Composition
 
@@ -166,7 +190,7 @@ try {
 | `ClientServerSchema` | `{ client: SchemaDefinition, server: SchemaDefinition }` |
 | `InferredClientServerEnv<T>` | Merged inferred type from client/server schemas |
 | `DefineEnvOptions` | Options for `defineEnv()` |
-| `ParseResult` | `{ ok: true, value: T } \| { ok: false, errors: ValidationError[] }` |
+| `ParseResult` | `{ success: true, value: T, errors: [] } \| { success: false, errors: ValidationError[] }` |
 | `ParseContext` | Context passed to validator parse functions |
 
 ## Documentation

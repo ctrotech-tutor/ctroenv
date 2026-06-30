@@ -1,12 +1,14 @@
-import { writeFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { mkdirSync, writeFileSync } from "node:fs"
+import { dirname, resolve } from "node:path"
 import { ExitCode } from "../exit-codes"
 import { divider, error, hint, success } from "../utils/output"
+import { generateSchemaFromEnv } from "../utils/env-to-schema"
 
 interface InitOptions {
   format: "ts" | "js" | "json"
   minimal: boolean
   cwd: string
+  fromEnv?: string
 }
 
 const TS_FULL = `import { defineConfig } from "@ctroenv/cli"
@@ -94,6 +96,36 @@ function getTemplate(format: "ts" | "js" | "json", minimal: boolean): string {
 }
 
 export async function initCommand(options: InitOptions): Promise<number> {
+  if (options.fromEnv) {
+    const envPath = resolve(options.cwd, options.fromEnv)
+    const { code, fileCount, errors: genErrors } = generateSchemaFromEnv(envPath)
+
+    if (genErrors.length > 0) {
+      for (const err of genErrors) {
+        process.stderr.write(`${error(err)}\n`)
+      }
+      if (fileCount === 0) return ExitCode.ConfigError
+    }
+
+    const schemaPath = resolve(options.cwd, "src", "env.ts")
+    try {
+      mkdirSync(dirname(schemaPath), { recursive: true })
+      writeFileSync(schemaPath, code, "utf-8")
+      process.stdout.write(`${success(`src/env.ts generated from ${options.fromEnv}`)}\n`)
+      if (fileCount > 0) {
+        process.stdout.write(`${hint(`${fileCount} environment variable${fileCount === 1 ? "" : "s"} mapped to schema validators.\n`)}`)
+      }
+      process.stdout.write(`${divider()}\n`)
+      process.stdout.write(`${hint("Review the schema and adjust validator types as needed.")}\n`)
+      process.stdout.write(`${hint("Then add any missing validators and run: ctroenv validate")}\n`)
+    } catch (e) {
+      process.stderr.write(`${error(`Could not write src/env.ts:`)}\n`)
+      console.error(e)
+      return ExitCode.ConfigError
+    }
+    return ExitCode.Success
+  }
+
   const filename =
     options.format === "ts"
       ? "ctroenv.config.ts"

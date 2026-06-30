@@ -15,10 +15,14 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 
 | Factory | Refinements | Type |
 |---------|-------------|------|
-| `string()` | `.url()`, `.email()`, `.port()`, `.min(n)`, `.max(n)`, `.regex(p)` | `Validator<string>` |
+| `string()` | `.url()`, `.email()`, `.port()`, `.hostname()`, `.min(n)`, `.max(n)`, `.regex(p)` | `Validator<string>` |
 | `number()` | `.int()`, `.port()`, `.positive()`, `.min(n)`, `.max(n)` | `Validator<number>` |
 | `boolean()` | accepts `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0` | `Validator<boolean>` |
 | `pick(["a","b"])` | — | `Validator<"a" \| "b">` |
+| `semver()` | — | `Validator<string>` |
+| `ip()` | `.v4()`, `.v6()` | `Validator<string>` |
+| `uuid()` | — | `Validator<string>` |
+| `guid()` | — | `Validator<string>` |
 
 ### Chainable Methods (Shared)
 
@@ -45,7 +49,9 @@ env.PORT         // number
 env.NODE_ENV     // "dev" | "prod"
 ```
 
-**Options:** `source` (EnvSource or plain object), `prefix` (string prepended to key lookups)
+**Options:** `source` (EnvSource or plain object), `prefix` (string prepended to key lookups), `maskWith` (custom mask string for secret values)
+
+**Sources:** `detectSource()` (auto: `import.meta.env` → `Deno.env` → `Bun.env` → `process.env`), `objectSource(obj)`, `workersSource(env)` (Cloudflare Workers), `nodeSource()` (`@ctroenv/node`), `viteSource()` (`@ctroenv/vite`)
 
 **Returns:** `EnvResult<T>` — a read-only object. If any `.secret()` vars exist, wrapped in a Proxy that masks reads with `"********"`.
 
@@ -119,7 +125,7 @@ catch (e) {
 
 | Package | Import | Source |
 |---------|--------|--------|
-| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files |
+| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` for system env |
 | `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `import.meta.env` |
 | `@ctroenv/nextjs` | `defineEnv()`, `withCtroEnv()` | Server/client split |
 
@@ -145,7 +151,7 @@ export default defineConfig({
 ### Custom Validators
 
 ```ts
-import { createValidator, applyChain, parseOk, singleError, errInvalid } from "@ctroenv/core"
+import { createValidator, applyChain, parseOk, parseFail, singleError, errInvalid, errMissing, errWrap, errType } from "@ctroenv/core"
 
 function semver() {
   const base = createValidator<string>(

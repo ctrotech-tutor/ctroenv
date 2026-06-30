@@ -2,6 +2,24 @@
 
 > Publish order: `@ctroenv/shared` → `@ctroenv/core` → `@ctroenv/cli` → `@ctroenv/node` → `@ctroenv/vite` → `@ctroenv/nextjs` (one-by-one, in sequence).
 
+## Bulk Commands
+
+### Build All Packages (one shot)
+
+```bash
+npm run build --workspace=packages/shared; npm run build --workspace=packages/core; npm run build --workspace=packages/cli; npm run build --workspace=packages/node; npm run build --workspace=packages/vite; npm run build --workspace=packages/nextjs
+```
+
+> Uses `;` separator — each build runs regardless of previous success. Build order respects dependencies (shared → core → cli/node/vite/nextjs).
+
+### Publish All Packages (one shot)
+
+```bash
+npm publish --workspace=packages/shared; npm publish --workspace=packages/core; npm publish --workspace=packages/cli; npm publish --workspace=packages/node; npm publish --workspace=packages/vite; npm publish --workspace=packages/nextjs
+```
+
+> **Warning:** Publishing sequentially with `;` means a failure mid-chain won't stop the rest. If any package fails to publish, the remaining commands still execute. For production releases, prefer the step-by-step guide below so you can verify each package before proceeding.
+
 ## Prerequisites
 
 ```bash

@@ -13,12 +13,12 @@ This skill provides deep knowledge of the CtroEnv library for AI agents. Load it
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@ctroenv/core` | 1.1.1 | Schema engine, validators, `defineEnv()`, errors (zero deps) |
-| `@ctroenv/cli` | 1.1.1 | CLI tooling (validate, generate, check, docs, init) |
-| `@ctroenv/node` | 1.0.3 | Node.js adapter (`loadEnv()`, `nodeSource()`) |
-| `@ctroenv/vite` | 1.0.3 | Vite adapter (`viteSource()`, `ctroenvPlugin()`) |
-| `@ctroenv/nextjs` | 1.0.3 | Next.js adapter (server/client split) |
-| `@ctroenv/shared` | 1.0.3 | Internal shared utilities |
+| `@ctroenv/core` | 1.4.0 | Schema engine, validators, `defineEnv()`, errors (zero deps) |
+| `@ctroenv/cli` | 1.2.2 | CLI tooling (validate, generate, check, docs, init) |
+| `@ctroenv/node` | 1.1.2 | Node.js adapter (`loadEnv()`, `nodeSource()`) |
+| `@ctroenv/vite` | 1.0.4 | Vite adapter (`viteSource()`, `ctroenvPlugin()`) |
+| `@ctroenv/nextjs` | 1.2.1 | Next.js adapter (server/client split) |
+| `@ctroenv/shared` | 1.0.4 | Internal shared utilities |
 
 ## Complete API Reference
 
@@ -37,6 +37,10 @@ string()                        // String validator with refinements
 number()                        // Number validator with refinements
 boolean()                       // Boolean validator
 pick(values)                    // Enum/union validator
+semver()                        // Semver string validator
+ip()                            // IP address validator (.v4(), .v6())
+uuid()                          // UUID string validator
+guid()                          // GUID string validator
 
 // Standalone refinements (wrap existing validators)
 url() email() port() min(n) max(n) integer() regex(p)
@@ -67,14 +71,15 @@ StringValidator, NumberValidator, BooleanValidator, PickValidator
 
 // Source
 EnvSource                       // { get(key): string | undefined }
-detectSource()                  // Auto: process.env or import.meta.env
+detectSource()                  // Auto: import.meta.env → Deno.env → Bun.env → process.env
 objectSource(record)            // Wrap plain object as EnvSource
+workersSource(env)              // Cloudflare Workers EnvSource
 ```
 
 ## Refinements Per Validator
 
 ### string()
-`.url()` `.email()` `.port()` `.min(n)` `.max(n)` `.regex(pattern)`
+`.url()` `.email()` `.port()` `.hostname()` `.min(n)` `.max(n)` `.regex(pattern)`
 
 ### number()
 `.int()` `.port()` `.positive()` `.min(n)` `.max(n)`
@@ -153,6 +158,7 @@ import { loadEnv } from "@ctroenv/node"
 const env = defineEnv(schema, { source: loadEnv() })
 // loadEnv() reads .env → .env.{NODE_ENV} → .env.local
 // loadEnv({ path: "../.." }) for monorepo root
+// loadEnv({ native: true }) reads system env vars too
 ```
 
 ### Vite (`@ctroenv/vite`)
@@ -181,7 +187,6 @@ export const env = defineEnv({
 
 ### cmd: `ctroenv validate`
 `--source <path>` `.env` file path (default: `process.env`)
-`--strict` Treat warnings as errors
 `--watch` Watch for changes, re-validate
 `--json` JSON output
 
@@ -192,6 +197,7 @@ export const env = defineEnv({
 ### cmd: `ctroenv check` (CI-friendly)
 `--source <path>` `.env` file to check (default: `.env`)
 `--strict` Validate values against schema validators
+`--warn-unknown` Warn about keys in source not in schema (with "did you mean?" suggestions)
 `--json` JSON output
 Exit code 0 = clean, 1 = differences found
 

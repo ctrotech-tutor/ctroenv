@@ -90,7 +90,7 @@ ctroenv docs [--output <path>] [--format <format>]
 Scaffold a configuration file.
 
 ```
-ctroenv init [--ts | --js | --json] [--minimal]
+ctroenv init [--ts | --js | --json] [--minimal] [--from-env <path>]
 ```
 
 | Flag | Default | Description |
@@ -99,6 +99,7 @@ ctroenv init [--ts | --js | --json] [--minimal]
 | `--js` | — | Generate JavaScript config |
 | `--json` | — | Generate JSON config |
 | `--minimal` | `false` | Generate minimal config (schema path only) |
+| `--from-env <path>` | — | Generate schema stub from existing `.env` file |
 
 ## Configuration
 

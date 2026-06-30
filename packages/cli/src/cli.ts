@@ -72,7 +72,17 @@ program
   .option("--js", "Generate JavaScript config")
   .option("--json", "Generate JSON config")
   .option("--minimal", "Generate minimal config")
+  .option("--from-env <path>", "Generate schema stub from an env file")
   .action(async (opts) => {
+    if (opts.fromEnv) {
+      const exitCode = await initCommand({
+        format: "ts",
+        minimal: false,
+        cwd: process.cwd(),
+        fromEnv: opts.fromEnv,
+      })
+      process.exit(exitCode)
+    }
     const format = opts.json ? "json" : opts.js ? "js" : "ts"
     const exitCode = await initCommand({
       format,
