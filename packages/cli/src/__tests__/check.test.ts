@@ -151,4 +151,61 @@ describe("check command", () => {
     expect(parsed.validationErrors).not.toBeNull()
     expect(parsed.validationErrors.length).toBeGreaterThan(0)
   })
+
+  it("warns about unknown keys with --warn-unknown", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      [
+        "DATABASE_URL=postgres://localhost/db",
+        "PORT=4000",
+        "NODE_ENV=prod",
+        "UNKNOWN_KEY=val",
+      ].join("\n"),
+      "utf-8",
+    )
+
+    const code = await checkCommand({
+      schema,
+      source: envPath,
+      warnUnknown: true,
+      json: "text",
+    })
+
+    expect(code).toBe(ExitCode.ValidationError)
+  })
+
+  it("suggels close matches with --warn-unknown", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      [
+        "DATABASE_URL=postgres://localhost/db",
+        "PORT=4000",
+        "NODE_ENV=prod",
+        "DATABASE_URLL=typo",
+      ].join("\n"),
+      "utf-8",
+    )
+
+    const logs: string[] = []
+    const spy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      logs.push(String(chunk))
+      return true
+    })
+
+    const code = await checkCommand({
+      schema,
+      source: envPath,
+      warnUnknown: true,
+      json: "text",
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.ValidationError)
+    const output = logs.join("")
+    expect(output).toContain("did you mean")
+    expect(output).toContain("DATABASE_URL")
+  })
 })

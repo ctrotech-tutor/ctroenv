@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { viteSource } from "../index"
 
 describe("viteSource", () => {
@@ -22,5 +22,12 @@ describe("viteSource", () => {
   it("returns undefined for missing key", () => {
     const source = viteSource()
     expect(source.get(KEY)).toBeUndefined()
+  })
+
+  it("returns undefined when process is unavailable", () => {
+    vi.stubGlobal("process", undefined)
+    const source = viteSource()
+    expect(source.get(KEY)).toBeUndefined()
+    vi.unstubAllGlobals()
   })
 })

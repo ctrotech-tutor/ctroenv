@@ -2,7 +2,7 @@ import { mkdtempSync, realpathSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { resolveConfig } from "../utils/config"
+import { loadConfigFile, resolveConfig } from "../utils/config"
 
 const FIXTURES = resolve(__dirname, "fixtures")
 
@@ -46,6 +46,12 @@ describe("resolveConfig", () => {
   it("handles non-existent config directory gracefully", () => {
     const config = resolveConfig(resolve(FIXTURES, "nonexistent"))
     expect(config.schema).toBe("src/env.ts")
+  })
+
+  it("returns null for corrupt JSON config file", () => {
+    tmpDir = realpathSync(mkdtempSync(join(tmpdir(), "ctroenv-corrupt-")))
+    writeFileSync(join(tmpDir, "ctroenv.json"), `{ invalid json }`, "utf-8")
+    expect(loadConfigFile(tmpDir)).toBeNull()
   })
 
   it("loads config via jiti for .ts config file", () => {

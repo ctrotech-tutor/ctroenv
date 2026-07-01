@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
+  createSpinner,
   divider,
   error,
   header,
@@ -61,5 +62,13 @@ describe("output utilities", () => {
 
   it("keyValueTable returns empty for no rows", () => {
     expect(keyValueTable([])).toBe("")
+  })
+
+  it("createSpinner fail writes to stdout with custom message", () => {
+    const spinner = createSpinner("loading")
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true)
+    spinner.fail("custom message")
+    expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining("custom message"))
+    writeSpy.mockRestore()
   })
 })

@@ -48,4 +48,14 @@ describe("suggestKey()", () => {
     const result = suggestKey("KEY", [])
     expect(result).toBeNull()
   })
+
+  it("considers case when calculating levenshtein distance", () => {
+    expect(levenshtein("PORT", "port")).toBe(4)
+    expect(levenshtein("PORT", "PORT")).toBe(0)
+  })
+
+  it("returns null when only case-different match exists beyond maxDistance", () => {
+    const result = suggestKey("port", ["PORT", "HOST"])
+    expect(result).toBeNull()
+  })
 })

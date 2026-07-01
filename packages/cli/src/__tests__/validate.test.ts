@@ -138,4 +138,133 @@ describe("validate command", () => {
     })
     expect(code).toBe(ExitCode.Success)
   })
+
+  it("outputs JSON on success with --json flag", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      "DATABASE_URL=postgres://localhost:5432/db\nPORT=4000\nNODE_ENV=production\n",
+      "utf-8",
+    )
+
+    const logs: string[] = []
+    const spy = vi.spyOn(console, "log").mockImplementation((...args) => logs.push(args.join(" ")))
+
+    const code = await validateCommand({
+      schema,
+      source: envPath,
+      watch: false,
+      json: "json",
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.Success)
+    expect(logs.length).toBe(1)
+    const parsed = JSON.parse(logs[0])
+    expect(parsed.valid).toBe(true)
+    expect(parsed.errors).toBe(0)
+  })
+
+  it("validates without source path (uses process.env)", async () => {
+    process.env.DATABASE_URL = "postgres://localhost/db"
+    process.env.PORT = "5000"
+    process.env.NODE_ENV = "development"
+
+    const code = await validateCommand({
+      schema,
+      watch: false,
+      json: "text",
+    })
+
+    delete process.env.DATABASE_URL
+    delete process.env.PORT
+    delete process.env.NODE_ENV
+
+    expect(code).toBe(ExitCode.Success)
+  })
+
+  it("validates with secrets maskWith (custom)", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(
+      envPath,
+      "DATABASE_URL=postgres://localhost:5432/db\nAPI_KEY=sk-secret\n",
+      "utf-8",
+    )
+
+    const code = await validateCommand({
+      schema: {
+        API_KEY: string().secret(),
+        DATABASE_URL: string().url(),
+      },
+      source: envPath,
+      watch: false,
+      json: "text",
+      secrets: { maskWith: "***" },
+    })
+
+    expect(code).toBe(ExitCode.Success)
+  })
+
+  it("handles runtime error during validation", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "KEY=value\n", "utf-8")
+
+    const logs: string[] = []
+    const spy = vi
+      .spyOn(console, "error")
+      .mockImplementation((...args) => logs.push(args.join(" ")))
+
+    const code = await validateCommand({
+      schema: null as unknown as SchemaDefinition,
+      source: envPath,
+      watch: false,
+      json: "text",
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.ConfigError)
+  })
+
+  it("handles watch mode (validation succeeds)", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "DATABASE_URL=postgres://localhost:5432/db\nPORT=4000\n", "utf-8")
+
+    const code = await validateCommand({
+      schema,
+      source: envPath,
+      watch: true,
+      json: "text",
+    })
+
+    expect(code).toBe(ExitCode.Success)
+  }, 10000)
+
+  it("validates with undefined value (optional without default)", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "DATABASE_URL=postgres://localhost:5432/db\n", "utf-8")
+
+    const logs: string[] = []
+    const spy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      logs.push(String(chunk))
+      return true
+    })
+
+    const code = await validateCommand({
+      schema: {
+        ...schema,
+        OPTIONAL_VAR: string().optional(),
+      },
+      source: envPath,
+      watch: false,
+      json: "text",
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.Success)
+    const output = logs.join("")
+    expect(output).toContain("undefined")
+  })
 })

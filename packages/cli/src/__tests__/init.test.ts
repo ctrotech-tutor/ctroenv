@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initCommand } from "../commands/init"
@@ -79,5 +79,84 @@ describe("init command", () => {
     const parsed = JSON.parse(content)
     expect(parsed.schema).toBe("./src/env.ts")
     expect(parsed.sources).toBeUndefined()
+  })
+
+  it("generates schema from --from-env", async () => {
+    const envPath = resolve(TMP, ".env.local")
+    writeFileSync(envPath, "DATABASE_URL=postgres://localhost/db\nPORT=4000\n", "utf-8")
+
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+      fromEnv: ".env.local",
+    })
+
+    expect(code).toBe(ExitCode.Success)
+    const schemaPath = resolve(TMP, "src", "env.ts")
+    expect(existsSync(schemaPath)).toBe(true)
+    const content = readFileSync(schemaPath, "utf-8")
+    expect(content).toContain("DATABASE_URL")
+    expect(content).toContain("PORT")
+  })
+
+  it("returns ConfigError when --from-env file not found", async () => {
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+      fromEnv: "nonexistent.env",
+    })
+
+    expect(code).toBe(ExitCode.ConfigError)
+  })
+
+  it("handles --from-env with mixed valid vars and parse errors", async () => {
+    const envPath = resolve(TMP, ".env.local")
+    writeFileSync(
+      envPath,
+      "DATABASE_URL=postgres://localhost/db\nINVALID_LINE_NO_EQUALS\nPORT=4000\n",
+      "utf-8",
+    )
+
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+      fromEnv: ".env.local",
+    })
+
+    expect(code).toBe(ExitCode.Success)
+    const content = readFileSync(resolve(TMP, "src", "env.ts"), "utf-8")
+    expect(content).toContain("DATABASE_URL")
+    expect(content).toContain("PORT")
+  })
+
+  it("returns ConfigError when schema file cannot be written from --from-env", async () => {
+    const envPath = resolve(TMP, ".env.local")
+    writeFileSync(envPath, "DATABASE_URL=postgres://localhost/db\n", "utf-8")
+    writeFileSync(resolve(TMP, "src"), "i am a file not a directory", "utf-8")
+
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+      fromEnv: ".env.local",
+    })
+
+    expect(code).toBe(ExitCode.ConfigError)
+  })
+
+  it("returns ConfigError when config file cannot be written", async () => {
+    rmSync(TMP, { recursive: true, force: true })
+    writeFileSync(TMP, "i am a file not a directory", "utf-8")
+
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+    })
+
+    expect(code).toBe(ExitCode.ConfigError)
   })
 })

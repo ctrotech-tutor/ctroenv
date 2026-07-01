@@ -206,4 +206,46 @@ describe("watchEnv()", () => {
     expect(env.CUSTOM).toBe("value")
     env.unwatch()
   })
+
+  it("uses objectSource when source is a plain record", () => {
+    const env = watchEnv({ KEY: string() }, { source: { KEY: "plain" }, pollInterval: 500 })
+    expect(env.KEY).toBe("plain")
+    env.unwatch()
+  })
+
+  it("uses detectSource when no source provided", () => {
+    process.env.__WATCH_ENV_TEST__ = "detected"
+    const env = watchEnv({ __WATCH_ENV_TEST__: string() }, { pollInterval: 500 })
+    expect(env.__WATCH_ENV_TEST__).toBe("detected")
+    delete process.env.__WATCH_ENV_TEST__
+    env.unwatch()
+  })
+
+  it("uses default pollInterval when not provided", () => {
+    const env = watchEnv({ KEY: string() }, { source: { KEY: "val" } })
+    expect(env.KEY).toBe("val")
+    env.unwatch()
+  })
+
+  it("unwatch is idempotent (called twice)", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { KEY: "val" }
+    const env = watchEnv({ KEY: string() }, { source, pollInterval: 100 })
+    env.unwatch()
+    env.unwatch()
+  })
+
+  it("polls with prefix configured", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { PX_KEY: "initial" }
+    const env = watchEnv({ KEY: string() }, { source, prefix: "PX_", pollInterval: 100 })
+
+    expect(env.KEY).toBe("initial")
+
+    source.PX_KEY = "updated"
+    vi.advanceTimersByTime(100)
+
+    expect(env.KEY).toBe("updated")
+    env.unwatch()
+  })
 })

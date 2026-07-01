@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { loadEnv } from "../index"
 
 const TMP = resolve(__dirname, ".tmp-load-env-test")
@@ -61,6 +61,20 @@ describe("loadEnv", () => {
     const source = loadEnv({ path: TMP })
     expect(source.get("STRING")).toBe("hello world")
     expect(source.get("CHAR")).toBe("a")
+  })
+
+  it("uses process.loadEnvFile when native:true and available", () => {
+    const original = (process as Record<string, unknown>).loadEnvFile
+    const mock = vi.fn()
+    ;(process as Record<string, unknown>).loadEnvFile = mock
+
+    try {
+      const source = loadEnv({ path: TMP, native: true })
+      expect(mock).toHaveBeenCalledWith(TMP)
+      expect(typeof source.get).toBe("function")
+    } finally {
+      ;(process as Record<string, unknown>).loadEnvFile = original
+    }
   })
 
   it("supports system fallback with system:true", () => {
