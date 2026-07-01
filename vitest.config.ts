@@ -1,6 +1,17 @@
+import { resolve } from "node:path"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@ctroenv/core": resolve("packages/core/src"),
+      "@ctroenv/shared": resolve("packages/shared/src"),
+      "@ctroenv/cli": resolve("packages/cli/src"),
+      "@ctroenv/node": resolve("packages/node/src"),
+      "@ctroenv/vite": resolve("packages/vite/src"),
+      "@ctroenv/nextjs": resolve("packages/nextjs/src"),
+    },
+  },
   test: {
     globals: true,
     environment: "node",

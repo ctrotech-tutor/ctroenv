@@ -1,5 +1,5 @@
-import { CtroEnvError, string } from "@ctroenv/core"
 import { beforeEach, describe, expect, it } from "vitest"
+import { CtroEnvError, string } from "../../../core/src"
 import { withCtroEnv } from "../index"
 
 describe("withCtroEnv", () => {

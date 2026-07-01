@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync } from "node:fs"
 import { resolve } from "node:path"
-import { number, string } from "@ctroenv/core"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { number, string } from "../../../core/src"
 import { ctroenvPlugin } from "../index"
 
 function mockPluginContext() {

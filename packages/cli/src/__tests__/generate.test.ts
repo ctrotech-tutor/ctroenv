@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs"
 import { resolve } from "node:path"
-import { number, pick, string } from "@ctroenv/core"
 import { describe, expect, it } from "vitest"
+import { number, pick, string } from "../../../core/src"
 import { generateCommand } from "../commands/generate"
 import { ExitCode } from "../exit-codes"
 

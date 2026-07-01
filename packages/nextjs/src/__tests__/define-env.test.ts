@@ -1,5 +1,5 @@
-import { string } from "@ctroenv/core"
 import { beforeEach, describe, expect, it } from "vitest"
+import { string } from "../../../core/src"
 import { defineEnv } from "../index"
 
 describe("defineEnv (Next.js)", () => {
