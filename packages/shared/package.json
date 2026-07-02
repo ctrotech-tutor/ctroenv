@@ -44,7 +44,7 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "keywords": [
     "environment",

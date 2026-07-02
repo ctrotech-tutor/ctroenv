@@ -12,5 +12,9 @@ coverage/
 .vercel/
 .vscode/
 apps/
-.anti-ai-writing.md
+anti-ai-writing.md
+PLAN.MD
+SKILL.md
 social/
+plan/
+.opencode/
