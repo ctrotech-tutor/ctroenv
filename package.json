@@ -27,7 +27,7 @@
     "@semantic-release/npm": "^13.1.5",
     "@size-limit/file": "^12.1.0",
     "@types/node": "^25.9.2",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.10",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "rimraf": "^6.1.3",
