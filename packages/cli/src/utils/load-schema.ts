@@ -48,7 +48,12 @@ function assertValidSchema(raw: unknown, path: string): SchemaDefinition {
   const looksNext = "server" in raw && "client" in raw
   for (const [key, validator] of Object.entries(raw)) {
     const v = validator as Partial<Validator<unknown>> | null
-    if (typeof v !== "object" || v === null || typeof v.parse !== "function" || !("metadata" in v)) {
+    if (
+      typeof v !== "object" ||
+      v === null ||
+      typeof v.parse !== "function" ||
+      !("metadata" in v)
+    ) {
       const hint =
         looksNext && (key === "server" || key === "client")
           ? `If this is a Next.js schema, both "server" and "client" must be objects of validators.`
@@ -65,7 +70,10 @@ function processModule(mod: Record<string, unknown>, path: string): SchemaDefini
   return assertValidSchema(flattenSchema(extractSchema(mod)), path)
 }
 
-export async function loadSchema(path: string, opts?: { reload?: boolean }): Promise<SchemaDefinition> {
+export async function loadSchema(
+  path: string,
+  opts?: { reload?: boolean },
+): Promise<SchemaDefinition> {
   if (opts?.reload) {
     // Fresh module instance via a cache-busted URL. jiti cannot reload
     // (its module registry survives new instances), so reload is native-only;

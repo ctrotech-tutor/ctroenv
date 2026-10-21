@@ -40,9 +40,7 @@ function numberBase(): Validator<number> {
         }
         value = Number(trimmed)
       } else {
-        return singleError(
-          errType(context.key, typeof input, "a number", { originalValue: input }),
-        )
+        return singleError(errType(context.key, typeof input, "a number", { originalValue: input }))
       }
 
       if (!Number.isFinite(value)) {
@@ -82,7 +80,8 @@ const numberMethods: SpecificMethods<number> = (current) => {
     applyChain(wrapRefinement(current, fn, typeLabel), numberMethods) as NumberValidator
 
   return {
-    int: () => refine((v) => (Number.isInteger(v) ? undefined : `Expected an integer, received ${v}`)),
+    int: () =>
+      refine((v) => (Number.isInteger(v) ? undefined : `Expected an integer, received ${v}`)),
 
     positive: () =>
       refine((v) => (v > 0 ? undefined : `Expected a positive number, received ${v}`)),

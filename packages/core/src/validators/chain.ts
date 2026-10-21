@@ -12,7 +12,9 @@ export interface ChainableMethods<T> {
   ): Validator<T> & ChainableMethods<T>
 }
 
-export type SpecificMethods<T> = (current: Validator<T>) => Record<string, (...args: never[]) => unknown>
+export type SpecificMethods<T> = (
+  current: Validator<T>,
+) => Record<string, (...args: never[]) => unknown>
 
 /**
  * Attach the generic chain methods (`.optional()`, `.default()`, …) to a

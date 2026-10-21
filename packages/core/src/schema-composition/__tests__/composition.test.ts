@@ -13,7 +13,7 @@ describe("defineSchema()", () => {
     const schema = defineSchema({
       PORT: number().port().default(3000).describe("Server port"),
     })
-      expect(schema.PORT.metadata.typeLabel).toBe("port")
+    expect(schema.PORT.metadata.typeLabel).toBe("port")
     expect(schema.PORT.metadata.hasDefault).toBe(true)
     expect(schema.PORT.metadata.defaultValue).toBe(3000)
     expect(schema.PORT.metadata.description).toBe("Server port")

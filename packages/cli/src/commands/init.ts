@@ -110,9 +110,7 @@ export async function initCommand(options: InitOptions): Promise<number> {
 
     const schemaPath = resolve(options.cwd, "src", "env.ts")
     if (!options.force && existsSync(schemaPath)) {
-      process.stderr.write(
-        `${error("src/env.ts already exists. Use --force to overwrite it.")}\n`,
-      )
+      process.stderr.write(`${error("src/env.ts already exists. Use --force to overwrite it.")}\n`)
       return ExitCode.ConfigError
     }
     try {

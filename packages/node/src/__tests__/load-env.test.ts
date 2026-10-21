@@ -141,28 +141,34 @@ describe("loadEnv", () => {
     writeFileSync(dev, "KEY=dev\n", "utf-8")
     writeFileSync(local, "KEY=local\n", "utf-8")
     withNodeEnv("development", () => {
-      withNativeLoader(() => {}, (mock) => {
-        const source = loadEnv({ path: TMP, native: true })
-        // loadEnvFile takes a single path and never overrides, so reverse
-        // order keeps .env.local winning, exactly like the built-in parser.
-        expect(mock.mock.calls).toEqual([[local], [dev], [base]])
-        // Native mode returns a live process.env source.
-        process.env.__CTROENV_NATIVE_TEST__ = "live"
-        try {
-          expect(source.get("__CTROENV_NATIVE_TEST__")).toBe("live")
-        } finally {
-          delete process.env.__CTROENV_NATIVE_TEST__
-        }
-      })
+      withNativeLoader(
+        () => {},
+        (mock) => {
+          const source = loadEnv({ path: TMP, native: true })
+          // loadEnvFile takes a single path and never overrides, so reverse
+          // order keeps .env.local winning, exactly like the built-in parser.
+          expect(mock.mock.calls).toEqual([[local], [dev], [base]])
+          // Native mode returns a live process.env source.
+          process.env.__CTROENV_NATIVE_TEST__ = "live"
+          try {
+            expect(source.get("__CTROENV_NATIVE_TEST__")).toBe("live")
+          } finally {
+            delete process.env.__CTROENV_NATIVE_TEST__
+          }
+        },
+      )
     })
   })
 
   it("skips process.loadEnvFile when no files exist", () => {
-    withNativeLoader(() => {}, (mock) => {
-      const source = loadEnv({ path: TMP, native: true })
-      expect(mock).not.toHaveBeenCalled()
-      expect(source.get("MISSING_KEY")).toBeUndefined()
-    })
+    withNativeLoader(
+      () => {},
+      (mock) => {
+        const source = loadEnv({ path: TMP, native: true })
+        expect(mock).not.toHaveBeenCalled()
+        expect(source.get("MISSING_KEY")).toBeUndefined()
+      },
+    )
   })
 
   it("warns and falls back to the built-in parser when native loading fails", () => {

@@ -146,9 +146,7 @@ describe("docsCommand", () => {
     })
     expect(exitCode).toBe(ExitCode.Success)
     const content = JSON.parse(readFileSync(outputPath, "utf-8"))
-    const apiKey = content.variables.find(
-      (v: { key: string }) => v.key === "API_KEY",
-    )
+    const apiKey = content.variables.find((v: { key: string }) => v.key === "API_KEY")
     expect(apiKey.default).toBe("********")
     expect(JSON.stringify(content)).not.toContain("sk-live-secret-value")
     const port = content.variables.find((v: { key: string }) => v.key === "PORT")
