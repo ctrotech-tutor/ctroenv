@@ -1,6 +1,7 @@
 import { isAbsolute, resolve as resolvePath } from "node:path"
 import { pathToFileURL } from "node:url"
 import { CtroEnvError, defineEnv, formatErrors, type SchemaDefinition } from "@ctroenv/core"
+import { createJiti } from "jiti"
 import type { Plugin, ResolvedConfig } from "vite"
 
 export interface CtroEnvPluginOptions {
@@ -9,9 +10,26 @@ export interface CtroEnvPluginOptions {
   maskWith?: string
 }
 
+// Native `import()` cannot load TypeScript on Node < 22.18 (no type
+// stripping), so TS schemas are routed through jiti. Plain JS keeps the
+// native path exactly as before.
+const TS_SCHEMA_EXT = /\.[mc]?tsx?$/i
+
+// Lazy singleton: jiti is never initialized for inline or .js schemas.
+// Importer is dual-format: `import.meta.url` in ESM, `__filename` in CJS
+// (where esbuild shims `import.meta` as `{}`).
+let jitiInstance: ReturnType<typeof createJiti> | undefined
+function jiti(): ReturnType<typeof createJiti> {
+  jitiInstance ??= createJiti(import.meta.url ?? __filename)
+  return jitiInstance
+}
+
 async function loadSchemaModule(path: string, root: string): Promise<SchemaDefinition> {
   const absolute = isAbsolute(path) ? path : resolvePath(root, path)
-  const mod = await import(/* @vite-ignore */ pathToFileURL(absolute).href)
+  const url = pathToFileURL(absolute).href
+  const mod = TS_SCHEMA_EXT.test(absolute)
+    ? await jiti().import(url)
+    : await import(/* @vite-ignore */ url)
   return (mod.schema ?? mod.env ?? mod.default) as SchemaDefinition
 }
 

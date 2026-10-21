@@ -1,8 +1,30 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { number, pick, string } from "../../../core/src"
 import { ctroenvPlugin } from "../index"
+
+// Records every specifier the plugin loads through jiti, while delegating to
+// the real implementation. Needed because routing cannot be asserted
+// behaviorally here: under vitest, vite-node transparently loads .ts, masking
+// the native-import failure this routing exists to fix. (The true Node < 22.18
+// proof is the with-vite matrix job running a real `vite build`.)
+const { jitiImportCalls } = vi.hoisted(() => ({ jitiImportCalls: [] as string[] }))
+vi.mock("jiti", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("jiti")>()
+  return {
+    ...actual,
+    createJiti: (...args: Parameters<typeof actual.createJiti>) => {
+      const instance = actual.createJiti(...args)
+      const origImport = instance.import.bind(instance)
+      instance.import = (async (spec: string) => {
+        jitiImportCalls.push(spec)
+        return origImport(spec)
+      }) as typeof instance.import
+      return instance
+    },
+  }
+})
 
 function mockPluginContext() {
   const warnings: string[] = []
@@ -31,6 +53,11 @@ function applyResolvedConfig(
 }
 
 describe("ctroenvPlugin", () => {
+  // NOTE: .ts fixtures import core via relative path, not the bare
+  // "@ctroenv/core" specifier: jiti loads them with real Node resolution
+  // (outside vite-node), and the CI test job never builds dist/, so the bare
+  // specifier would fail there. (.mjs fixtures keep the bare specifier —
+  // they exercise the native/vite-node path.)
   const TMP = resolve(__dirname, ".tmp-plugin-test")
 
   const validSchema = {
@@ -108,7 +135,7 @@ describe("ctroenvPlugin", () => {
     const { writeFileSync } = await import("node:fs")
     writeFileSync(
       schemaPath,
-      `import { string, number } from "@ctroenv/core";
+      `import { string, number } from "../../../../core/src";
 export const schema = { PORT: number().port().default(3000), NODE_ENV: string() };`,
       "utf-8",
     )
@@ -124,7 +151,7 @@ export const schema = { PORT: number().port().default(3000), NODE_ENV: string() 
     const { writeFileSync } = await import("node:fs")
     writeFileSync(
       schemaPath,
-      `import { string, number } from "@ctroenv/core";
+      `import { string, number } from "../../../../core/src";
 export const env = { PORT: number().port().default(3000) };`,
       "utf-8",
     )
@@ -132,6 +159,44 @@ export const env = { PORT: number().port().default(3000) };`,
     const ctx = mockPluginContext()
     await plugin.buildStart?.call(ctx as never)
     expect(ctx.warnings.length).toBeGreaterThan(0)
+  })
+
+  it("routes .ts schemas through jiti (Node < 22.18 has no type stripping)", async () => {
+    const schemaPath = resolve(TMP, "ts-syntax-schema.ts")
+    const { writeFileSync } = await import("node:fs")
+    writeFileSync(
+      schemaPath,
+      `import { string, number } from "../../../../core/src";
+const port: number = 3000;
+export const schema: Record<string, unknown> = { PORT: number().port().default(port), NODE_ENV: string() };`,
+      "utf-8",
+    )
+    process.env.NODE_ENV = "test"
+    const before = jitiImportCalls.length
+    const plugin = ctroenvPlugin({ schema: schemaPath })
+    const ctx = mockPluginContext()
+    await plugin.buildStart?.call(ctx as never)
+    expect(ctx.errors).toHaveLength(0)
+    expect(jitiImportCalls.length).toBe(before + 1)
+    expect(jitiImportCalls[jitiImportCalls.length - 1]).toContain("ts-syntax-schema.ts")
+  })
+
+  it("keeps .js schemas on the native import path (no jiti)", async () => {
+    const schemaPath = resolve(TMP, "plain-schema.mjs")
+    const { writeFileSync } = await import("node:fs")
+    writeFileSync(
+      schemaPath,
+      `import { string, number } from "@ctroenv/core";
+export const schema = { PORT: number().port().default(3000), NODE_ENV: string() };`,
+      "utf-8",
+    )
+    process.env.NODE_ENV = "test"
+    const before = jitiImportCalls.length
+    const plugin = ctroenvPlugin({ schema: schemaPath })
+    const ctx = mockPluginContext()
+    await plugin.buildStart?.call(ctx as never)
+    expect(ctx.errors).toHaveLength(0)
+    expect(jitiImportCalls.length).toBe(before)
   })
 
   it("accepts maskWith option", async () => {
@@ -247,7 +312,7 @@ export const env = { PORT: number().port().default(3000) };`,
       mkdirSync(nested, { recursive: true })
       writeFileSync(
         resolve(nested, "schema.ts"),
-        `import { string } from "@ctroenv/core";\nexport const schema = { ${FILE_VAR}: string().url() };`,
+        `import { string } from "../../../../../core/src";\nexport const schema = { ${FILE_VAR}: string().url() };`,
         "utf-8",
       )
       writeFileSync(resolve(TMP, ".env"), `${FILE_VAR}=https://nested.example.com\n`, "utf-8")
