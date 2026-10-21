@@ -1,6 +1,27 @@
 # CtroEnv Examples
 
-Each example is a standalone project. Run `npm install && npm start` in any directory to try it.
+Each example is a standalone project. To try one:
+
+```bash
+cd <example>
+npm install
+cp .env.example .env   # with-cli ships a deliberately broken one on purpose
+npm start              # or the example's own command from the table below
+```
+
+(`github-actions` is a reusable workflow file, not a runnable project — it has no `.env.example`.)
+
+## Verifying an example
+
+Each runnable example has a self-contained `smoke` script that runs its documented happy path end-to-end:
+
+```bash
+cd <example>
+npm install
+npm run smoke
+```
+
+`with-cli`'s smoke additionally asserts the failure path: it resets `.env` from the deliberately broken fixture, watches validation fail, applies the documented fixes, and re-validates. Server examples (`with-express`, `monorepo`) boot, probe `/health`, and shut down automatically. CI runs every smoke on each PR (`.github/workflows/examples.yml`), installing lockless from the registry — example lockfiles are intentionally not committed.
 
 ## Quick Reference
 
@@ -50,7 +71,7 @@ Each example is a standalone project. Run `npm install && npm start` in any dire
 - `ctroenv check` — CI-friendly structural diff (missing + unused keys)
 - `ctroenv docs` — auto-generates `ENVIRONMENT.md`
 - `ctroenv.config.ts` with secrets masking and output paths
-- Steps: fix `.env` → re-run to see success → generate docs
+- Steps: `cp .env.example .env` → run `npm run validate` to see the errors → fix `.env` → re-run to see success → generate docs
 
 ### [monorepo](./monorepo)
 - Sharing base schema via workspace dependency (`@example/shared-config`)

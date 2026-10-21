@@ -71,6 +71,10 @@ The plugin validates against the same values your app will see, using Vite's own
 
 Note that Vite never exposes non-prefixed file-only vars at runtime, so a schema entry that exists only as a non-prefixed `.env` line is correctly reported as missing — export it or prefix it with `VITE_`.
 
+### Dual entry: browser-safe source, Node plugin
+
+Both imports below come from the same `"@ctroenv/vite"` specifier — no import changes needed. The package resolves to a browser-safe build (`viteSource` only, no `node:*` or `vite` imports) in client bundles via the `default` export condition, and to the full build (plugin + source) under the `node` condition (`vite.config.ts`, scripts, tests).
+
 ### `viteSource`
 
 ```ts

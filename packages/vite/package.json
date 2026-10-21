@@ -5,13 +5,19 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "node": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/browser.js"
+      }
     }
   },
   "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "module": "./dist/browser.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -28,6 +34,13 @@
   },
   "size-limit": [
     {
+      "name": "browser entry (viteSource)",
+      "path": "dist/browser.js",
+      "limit": "2 KB",
+      "gzip": true
+    },
+    {
+      "name": "node entry (plugin + source)",
       "path": "dist/index.js",
       "limit": "2 KB",
       "gzip": true

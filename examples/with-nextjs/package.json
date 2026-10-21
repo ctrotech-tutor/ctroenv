@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "smoke": "test -f .env || cp .env.example .env && npm run build"
   },
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
@@ -16,6 +17,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "typescript": "^5.8.0"
   }
 }

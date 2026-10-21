@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "smoke": "test -f .env || cp .env.example .env && (exec ./node_modules/.bin/tsx src/index.ts & SRV=$!; trap 'kill $SRV' EXIT; sleep 8; curl -sf http://localhost:3000/health)"
   },
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
@@ -13,6 +14,7 @@
   "devDependencies": {
     "@ctroenv/cli": "^1.0.0",
     "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.19.0"
   }
 }

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "smoke": "test -f .env || cp .env.example .env && npm run build"
   },
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
