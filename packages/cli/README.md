@@ -33,11 +33,12 @@ npx @ctroenv/cli validate
 Validate current environment against schema.
 
 ```
-ctroenv validate [--source <path>] [--watch] [--json]
+ctroenv validate [--schema <path>] [--source <path>] [--watch] [--json]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--schema <path>` | Config `schema` or auto-discovery | Path to schema file |
 | `--source <path>` | Config `sources.default` or `process.env` | Path to `.env` file |
 | `--watch` | `false` | Watch files and re-validate on change |
 | `--json` | `false` | Output JSON instead of formatted text |
@@ -47,12 +48,13 @@ ctroenv validate [--source <path>] [--watch] [--json]
 Generate `.env.example` from schema.
 
 ```
-ctroenv generate [--output <path>] [--no-comments]
+ctroenv generate [--schema <path>] [--output <path>] [--no-comments]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--output <path>` | `".env.example"` | Output file path |
+| `--schema <path>` | Config `schema` or auto-discovery | Path to schema file |
+| `--output <path>` | Config `output.example` or `".env.example"` | Output file path |
 | `--no-comments` | `false` | Minimal output without comments |
 
 ### `check`
@@ -60,11 +62,12 @@ ctroenv generate [--output <path>] [--no-comments]
 CI-friendly diff of .env vs schema.
 
 ```
-ctroenv check [--source <path>] [--strict] [--warn-unknown] [--json]
+ctroenv check [--schema <path>] [--source <path>] [--strict] [--warn-unknown] [--json]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--schema <path>` | Config `schema` or auto-discovery | Path to schema file |
 | `--source <path>` | Config `sources.default` or `".env"` | Path to `.env` file |
 | `--strict` | `false` | Also validate values against schema |
 | `--warn-unknown` | `false` | Warn about keys in source not in schema (with "did you mean?" suggestions) |
@@ -77,12 +80,13 @@ Exit code `0` on success, `1` on missing/unused keys or validation errors.
 Generate documentation from schema.
 
 ```
-ctroenv docs [--output <path>] [--format <format>]
+ctroenv docs [--schema <path>] [--output <path>] [--format <format>]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--output <path>` | `"ENVIRONMENT.md"` | Output file path |
+| `--schema <path>` | Config `schema` or auto-discovery | Path to schema file |
+| `--output <path>` | Config `output.docs` or `"ENVIRONMENT.md"` | Output file path |
 | `--format <format>` | `"markdown"` | Output format: `markdown` or `json` |
 
 ### `init`
@@ -90,7 +94,7 @@ ctroenv docs [--output <path>] [--format <format>]
 Scaffold a configuration file.
 
 ```
-ctroenv init [--ts | --js | --json] [--minimal] [--from-env <path>]
+ctroenv init [--ts | --js | --json] [--minimal] [--from-env <path>] [--force]
 ```
 
 | Flag | Default | Description |
@@ -100,6 +104,7 @@ ctroenv init [--ts | --js | --json] [--minimal] [--from-env <path>]
 | `--json` | — | Generate JSON config |
 | `--minimal` | `false` | Generate minimal config (schema path only) |
 | `--from-env <path>` | — | Generate schema stub from existing `.env` file |
+| `--force` | `false` | Overwrite existing files (refused by default) |
 
 ## Configuration
 
@@ -129,7 +134,7 @@ export default defineConfig({
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `schema` | `string` | `"src/env.ts"` | Path to schema file |
+| `schema` | `string` | Auto-discovery (`src/env.ts`, `env.ts`, …) | Path to schema file |
 | `sources.default` | `string` | `".env"` | Default env file path |
 | `sources.production` | `string` | — | Production env file path |
 | `output.example` | `string` | `".env.example"` | Output path for `generate` |

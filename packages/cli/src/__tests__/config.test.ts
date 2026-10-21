@@ -21,7 +21,8 @@ describe("resolveConfig", () => {
 
   it("uses defaults for minimal fixture (no config file)", () => {
     const config = resolveConfig(resolve(FIXTURES, "minimal"))
-    expect(config.schema).toBe("src/env.ts")
+    // Null means "auto-discover" — no hardcoded src/env.ts default.
+    expect(config.schema).toBeNull()
     expect(config.output.example).toBe(".env.example")
     expect(config.output.docs).toBe("ENVIRONMENT.md")
   })
@@ -45,7 +46,7 @@ describe("resolveConfig", () => {
 
   it("handles non-existent config directory gracefully", () => {
     const config = resolveConfig(resolve(FIXTURES, "nonexistent"))
-    expect(config.schema).toBe("src/env.ts")
+    expect(config.schema).toBeNull()
   })
 
   it("returns null for corrupt JSON config file", () => {

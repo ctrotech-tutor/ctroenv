@@ -125,22 +125,28 @@ export function generateSchemaFromEnv(envPath: string): {
     return { code: "", fileCount: 0, errors: ["No environment variables found in file"] }
   }
 
-  const lines: string[] = []
-  lines.push('import { defineEnv, string, number, boolean } from "@ctroenv/core"')
-  lines.push("")
-  lines.push("export const env = defineEnv({")
+  // The stub exports only the schema object — never a defineEnv() result —
+  // so it stays importable with any (even empty) environment.
+  const entries: string[] = []
+  const usedValidators = new Set<string>()
 
   for (const v of vars) {
     if (v.comment) {
-      lines.push(`  // ${v.comment}`)
+      entries.push(`  // ${v.comment}`)
     }
 
     const typeStr = v.value ? inferType(v.value) : "string()"
+    usedValidators.add(typeStr.slice(0, -2))
     const keyStr = sanitizeKey(v.key)
-    lines.push(`  ${keyStr}: ${typeStr},`)
+    entries.push(`  ${keyStr}: ${typeStr},`)
   }
 
-  lines.push("})")
+  const lines: string[] = []
+  lines.push(`import { ${[...usedValidators].sort().join(", ")} } from "@ctroenv/core"`)
+  lines.push("")
+  lines.push("export const schema = {")
+  lines.push(...entries)
+  lines.push("}")
   lines.push("")
 
   return { code: lines.join("\n"), fileCount: vars.length, errors }

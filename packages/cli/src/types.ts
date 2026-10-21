@@ -12,7 +12,8 @@ export interface CliConfig {
 }
 
 export interface ResolvedConfig {
-  schema: string
+  /** Explicit schema path (flag or config file), or null to auto-discover. */
+  schema: string | null
   sources: Record<string, string>
   output: {
     example: string

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import { number, pick, string } from "../../../core/src"
 import { validateCommand } from "../commands/validate"
 import { ExitCode } from "../exit-codes"
+import { loadSchema } from "../utils/load-schema"
 
 const TMP = resolve(__dirname, ".tmp-validate-test")
 
@@ -227,19 +228,134 @@ describe("validate command", () => {
     expect(code).toBe(ExitCode.ConfigError)
   })
 
-  it("handles watch mode (validation succeeds)", async () => {
+  it("stays alive in watch mode and revalidates on env change", async () => {
     const envPath = resolve(TMP, ".env")
-    writeFileSync(envPath, "DATABASE_URL=postgres://localhost:5432/db\nPORT=4000\n", "utf-8")
+    writeFileSync(
+      envPath,
+      "DATABASE_URL=postgres://localhost:5432/db\nPORT=4000\nNODE_ENV=production\n",
+      "utf-8",
+    )
 
-    const code = await validateCommand({
-      schema,
-      source: envPath,
-      watch: true,
-      json: "text",
+    const writes: string[] = []
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      writes.push(String(chunk))
+      return true
     })
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
+      writes.push(String(chunk))
+      return true
+    })
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never)
 
-    expect(code).toBe(ExitCode.Success)
-  }, 10000)
+    try {
+      let settled = false
+      // Intentionally not awaited: watch mode must never resolve on its own.
+      validateCommand({ schema, source: envPath, watch: true, json: "text" }).then(
+        () => {
+          settled = true
+        },
+        () => {
+          settled = true
+        },
+      )
+
+      await vi.waitFor(
+        () => {
+          expect(writes.join("")).toContain("All 3 variables valid")
+        },
+        { timeout: 8000 },
+      )
+      expect(settled).toBe(false)
+
+      // Break the env file: the watcher must revalidate and report errors.
+      writeFileSync(envPath, "DATABASE_URL=not-a-url\n", "utf-8")
+      await vi.waitFor(
+        () => {
+          expect(writes.join("")).toContain("Invalid")
+        },
+        { timeout: 8000 },
+      )
+      expect(settled).toBe(false)
+
+      // SIGINT stops the watcher via process.exit.
+      process.emit("SIGINT")
+      await vi.waitFor(
+        () => {
+          expect(exitSpy).toHaveBeenCalledWith(0)
+        },
+        { timeout: 8000 },
+      )
+    } finally {
+      // Stop the watcher even on failure: a leaked watcher would observe the
+      // next test's files and pollute its assertions.
+      process.emit("SIGINT")
+      await new Promise((r) => setTimeout(r, 500))
+      stdoutSpy.mockRestore()
+      stderrSpy.mockRestore()
+      exitSpy.mockRestore()
+    }
+  }, 30000)
+
+  it("reloads the schema when the schema file changes in watch mode", async () => {
+    // Hermetic inline-validator schema (.mjs: natively importable on every Node).
+    const schemaPath = resolve(TMP, "watch-schema.mjs")
+    const stub = (extra: string) =>
+      `export const schema = {\nPRESENT: { parse: (v) => ({ success: true, value: v }), metadata: {} },\n${extra}\n}`
+    writeFileSync(schemaPath, stub(""), "utf-8")
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "PRESENT=yes\n", "utf-8")
+
+    const writes: string[] = []
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      writes.push(String(chunk))
+      return true
+    })
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
+      writes.push(String(chunk))
+      return true
+    })
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never)
+
+    try {
+      const initial = await loadSchema(schemaPath)
+      validateCommand({ schema: initial, source: envPath, watch: true, json: "text", schemaPath })
+
+      await vi.waitFor(
+        () => {
+          expect(writes.join("")).toContain("All 1 variables valid")
+        },
+        { timeout: 8000 },
+      )
+
+      // Add a required var to the schema: the reloaded schema must fail.
+      writeFileSync(
+        schemaPath,
+        stub("ADDED: { parse: (v) => ({ success: true, value: v }), metadata: {} },"),
+        "utf-8",
+      )
+      await vi.waitFor(
+        () => {
+          expect(writes.join("")).toContain("Missing required")
+        },
+        { timeout: 8000 },
+      )
+
+      process.emit("SIGINT")
+      await vi.waitFor(
+        () => {
+          expect(exitSpy).toHaveBeenCalledWith(0)
+        },
+        { timeout: 8000 },
+      )
+    } finally {
+      // Stop the watcher even on failure (see the test above).
+      process.emit("SIGINT")
+      await new Promise((r) => setTimeout(r, 500))
+      stdoutSpy.mockRestore()
+      stderrSpy.mockRestore()
+      exitSpy.mockRestore()
+    }
+  }, 30000)
 
   it("validates with undefined value (optional without default)", async () => {
     const envPath = resolve(TMP, ".env")

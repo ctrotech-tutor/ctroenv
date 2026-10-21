@@ -19,7 +19,7 @@ describe("loadSchema", () => {
     const filePath = join(tmpDir, "env.ts")
     writeFileSync(
       filePath,
-      `export const schema = { KEY: { metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
+      `export const schema = { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
       "utf-8",
     )
     const schema = await loadSchema(filePath)
@@ -31,7 +31,7 @@ describe("loadSchema", () => {
     const filePath = join(tmpDir, "env-default.ts")
     writeFileSync(
       filePath,
-      `export default { KEY: { metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
+      `export default { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
       "utf-8",
     )
     const schema = await loadSchema(filePath)
@@ -43,7 +43,7 @@ describe("loadSchema", () => {
     const filePath = join(tmpDir, "env-export.ts")
     writeFileSync(
       filePath,
-      `export const env = { KEY: { metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
+      `export const env = { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } }`,
       "utf-8",
     )
     const schema = await loadSchema(filePath)
@@ -64,8 +64,8 @@ describe("loadSchema", () => {
     writeFileSync(
       filePath,
       `export const schema = {
-        server: { DB_URL: { metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: true } } },
-        client: { NEXT_PUBLIC_API: { metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } },
+        server: { DB_URL: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: true } } },
+        client: { NEXT_PUBLIC_API: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string", optional: false, hasDefault: false, isSecret: false } } },
       }`,
       "utf-8",
     )
@@ -80,59 +80,76 @@ describe("loadSchema", () => {
     await expect(loadSchema(filePath)).rejects.toThrow()
   })
 
-  it("handles schema where exported schema is not an object (e.g., string)", async () => {
+  it("throws when the exported schema is not an object (e.g., string)", async () => {
     const filePath = join(tmpDir, "string-schema.ts")
     writeFileSync(filePath, `export const schema = "not-a-schema-object"`, "utf-8")
-    const schema = await loadSchema(filePath)
-    expect(schema).toBe("not-a-schema-object")
+    await expect(loadSchema(filePath)).rejects.toThrow(/expected an object of validators/)
   })
 
-  it("handles Next.js schema where server is null", async () => {
+  it("throws for a Next.js schema where server is null", async () => {
     const filePath = join(tmpDir, "null-server.ts")
     writeFileSync(
       filePath,
-      `export const schema = { server: null, client: { KEY: { metadata: { typeLabel: "string" } } } }`,
+      `export const schema = { server: null, client: { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string" } } } }`,
       "utf-8",
     )
-    const schema = await loadSchema(filePath)
-    expect(schema.server).toBeNull()
-    expect((schema as Record<string, unknown>).client).toBeDefined()
+    await expect(loadSchema(filePath)).rejects.toThrow(/entry "server" is not a validator/)
   })
 
-  it("handles Next.js schema where client is null", async () => {
+  it("throws for a Next.js schema where client is null", async () => {
     const filePath = join(tmpDir, "null-client.ts")
     writeFileSync(
       filePath,
-      `export const schema = { server: { KEY: { metadata: { typeLabel: "string" } } }, client: null }`,
+      `export const schema = { server: { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string" } } }, client: null }`,
       "utf-8",
     )
-    const schema = await loadSchema(filePath)
-    expect((schema as Record<string, unknown>).server).toBeDefined()
-    expect(schema.client).toBeNull()
+    // "server" fails first (entry order); the hint names the Next.js shape.
+    await expect(loadSchema(filePath)).rejects.toThrow(
+      /entry "server" is not a validator.*Next\.js schema/s,
+    )
   })
 
-  it("handles schema where client has .parse function (not Next.js schema)", async () => {
+  it("throws when a flat entry looks like a validator but lacks metadata", async () => {
     const filePath = join(tmpDir, "validator-client.ts")
     writeFileSync(
       filePath,
-      `export const schema = { server: { KEY: { metadata: { typeLabel: "string" } } }, client: { parse: () => "ok" } }`,
+      `export const schema = { server: { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string" } } }, client: { parse: () => "ok" } }`,
       "utf-8",
     )
-    const schema = await loadSchema(filePath)
-    expect((schema as Record<string, unknown>).server).toBeDefined()
-    expect((schema as Record<string, unknown>).client).toBeDefined()
+    // Not a Next.js schema (client has .parse), so "server"/"client" are flat
+    // entries — and neither is a validator.
+    await expect(loadSchema(filePath)).rejects.toThrow(/is not a validator/)
   })
 
-  it("handles schema where server has .parse function (not Next.js schema)", async () => {
+  it("throws when a flat entry looks like a validator but lacks metadata (server)", async () => {
     const filePath = join(tmpDir, "validator-server.ts")
     writeFileSync(
       filePath,
-      `export const schema = { server: { parse: () => "ok" }, client: { KEY: { metadata: { typeLabel: "string" } } } }`,
+      `export const schema = { server: { parse: () => "ok" }, client: { KEY: { parse: () => ({ success: true, value: null }), metadata: { typeLabel: "string" } } } }`,
       "utf-8",
     )
-    const schema = await loadSchema(filePath)
-    // Falls through to flat schema: both server and client become schema keys
-    expect(schema.server).toBeDefined()
-    expect(schema.client).toBeDefined()
+    await expect(loadSchema(filePath)).rejects.toThrow(/is not a validator/)
+  })
+
+  it("throws a helpful error when the file exports a validated env instead of a schema", async () => {
+    const filePath = join(tmpDir, "validated-env.ts")
+    writeFileSync(filePath, `export const env = { API_KEY: "abcd", PORT: 3000 }`, "utf-8")
+    await expect(loadSchema(filePath)).rejects.toThrow(
+      /entry "API_KEY" is not a validator.*validated environment/s,
+    )
+  })
+
+  it("reloads a changed file with { reload: true }", async () => {
+    // .mjs: natively importable on every supported Node (no TS stripping needed).
+    const filePath = join(tmpDir, "reloadable.mjs")
+    const stub = (key: string) =>
+      `export const schema = { ${key}: { parse: () => ({ success: true, value: null }), metadata: {} } }`
+    writeFileSync(filePath, stub("BEFORE"), "utf-8")
+    const first = await loadSchema(filePath)
+    expect(first.BEFORE).toBeDefined()
+    writeFileSync(filePath, stub("AFTER"), "utf-8")
+    const second = await loadSchema(filePath, { reload: true })
+    expect(second.AFTER).toBeDefined()
+    expect((second as Record<string, unknown>).BEFORE).toBeUndefined()
   })
 })

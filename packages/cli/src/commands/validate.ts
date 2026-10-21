@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { CtroEnvError, defineEnv, formatErrors, type SchemaDefinition } from "@ctroenv/core"
 import { watch } from "chokidar"
 import { parse as parseDotenv } from "dotenv"
 import { ExitCode } from "../exit-codes"
 import type { Format } from "../types"
+import { loadSchema } from "../utils/load-schema"
 import { cliLogger } from "../utils/logger"
 import { createSpinner, divider, error, header, hint, keyValueTable } from "../utils/output"
 
@@ -174,12 +176,29 @@ export async function validateCommand(options: ValidateOptions): Promise<number>
       awaitWriteFinish: { stabilityThreshold: 300 },
     })
 
-    let result = await runValidation(options, options.source, sourceName)
+    // Current schema: reloaded when the schema file itself changes.
+    let schema = options.schema
+    const currentOptions = (): ValidateOptions => ({ ...options, schema })
 
-    watcher.on("change", async (changedPath) => {
-      process.stdout.write("\n")
-      cliLogger.info(`Change detected: ${changedPath}`)
-      result = await runValidation(options, options.source, sourceName)
+    // Serialize re-runs so rapid successive saves cannot interleave output.
+    let queue: Promise<unknown> = Promise.resolve()
+    watcher.on("change", (changedPath) => {
+      queue = queue.then(async () => {
+        process.stdout.write("\n")
+        cliLogger.info(`Change detected: ${changedPath}`)
+        if (options.schemaPath && resolve(changedPath) === options.schemaPath) {
+          try {
+            schema = await loadSchema(options.schemaPath, { reload: true })
+            cliLogger.info("Schema reloaded")
+          } catch {
+            cliLogger.error(
+              "Schema changed but could not be reloaded; keeping the previous schema. " +
+                "Restart the watcher to pick up schema edits.",
+            )
+          }
+        }
+        await runValidation(currentOptions(), options.source, sourceName)
+      })
     })
 
     watcher.on("error", (err) => {
@@ -190,7 +209,17 @@ export async function validateCommand(options: ValidateOptions): Promise<number>
       watcher.close().then(() => process.exit(0))
     })
 
-    return result
+    // Wait for the initial scan: edits made before "ready" may be swallowed
+    // as initial state (ignoreInitial) and never revalidate.
+    await new Promise<void>((resolveReady) => {
+      watcher.on("ready", () => resolveReady())
+    })
+
+    await runValidation(currentOptions(), options.source, sourceName)
+    process.stdout.write(`${hint("Watching for changes… (Ctrl+C to stop)")}\n`)
+    // Never resolve: returning would let the CLI exit and kill the watcher.
+    // The process ends via SIGINT.
+    await new Promise<never>(() => {})
   }
 
   return runValidation(options, options.source, sourceName)

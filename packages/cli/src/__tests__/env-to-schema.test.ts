@@ -23,9 +23,12 @@ describe("generateSchemaFromEnv", () => {
 
     expect(result.errors).toHaveLength(0)
     expect(result.fileCount).toBe(2)
-    expect(result.code).toContain("defineEnv")
+    // Schema-only stub: importable with any environment (no defineEnv call).
+    expect(result.code).toContain("export const schema = {")
+    expect(result.code).not.toContain("defineEnv")
     expect(result.code).toContain("DATABASE_URL: string()")
     expect(result.code).toContain("PORT: number()")
+    expect(result.code).toContain('import { number, string } from "@ctroenv/core"')
   })
 
   it("infers boolean type", () => {

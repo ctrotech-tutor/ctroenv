@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { ExitCode } from "../exit-codes"
 import { generateSchemaFromEnv } from "../utils/env-to-schema"
@@ -9,6 +9,7 @@ interface InitOptions {
   minimal: boolean
   cwd: string
   fromEnv?: string
+  force?: boolean
 }
 
 const TS_FULL = `import { defineConfig } from "@ctroenv/cli"
@@ -108,6 +109,12 @@ export async function initCommand(options: InitOptions): Promise<number> {
     }
 
     const schemaPath = resolve(options.cwd, "src", "env.ts")
+    if (!options.force && existsSync(schemaPath)) {
+      process.stderr.write(
+        `${error("src/env.ts already exists. Use --force to overwrite it.")}\n`,
+      )
+      return ExitCode.ConfigError
+    }
     try {
       mkdirSync(dirname(schemaPath), { recursive: true })
       writeFileSync(schemaPath, code, "utf-8")
@@ -135,6 +142,10 @@ export async function initCommand(options: InitOptions): Promise<number> {
         ? "ctroenv.config.js"
         : "ctroenv.json"
   const filePath = resolve(options.cwd, filename)
+  if (!options.force && existsSync(filePath)) {
+    process.stderr.write(`${error(`${filename} already exists. Use --force to overwrite it.`)}\n`)
+    return ExitCode.ConfigError
+  }
 
   try {
     writeFileSync(filePath, getTemplate(options.format, options.minimal), "utf-8")

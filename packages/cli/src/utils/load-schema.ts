@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url"
 import type { SchemaDefinition, Validator } from "@ctroenv/core"
 import { createJiti } from "jiti"
 import { cliLogger } from "./logger"
@@ -37,19 +38,56 @@ function flattenSchema(raw: SchemaDefinition): SchemaDefinition {
   return raw
 }
 
-export async function loadSchema(path: string): Promise<SchemaDefinition> {
+function assertValidSchema(raw: unknown, path: string): SchemaDefinition {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    throw new Error(
+      `Could not load schema from ${path}: expected an object of validators (\`export const schema = { ... }\`), ` +
+        `received ${Array.isArray(raw) ? "an array" : String(raw === null ? "null" : typeof raw)}.`,
+    )
+  }
+  const looksNext = "server" in raw && "client" in raw
+  for (const [key, validator] of Object.entries(raw)) {
+    const v = validator as Partial<Validator<unknown>> | null
+    if (typeof v !== "object" || v === null || typeof v.parse !== "function" || !("metadata" in v)) {
+      const hint =
+        looksNext && (key === "server" || key === "client")
+          ? `If this is a Next.js schema, both "server" and "client" must be objects of validators.`
+          : `If this file exports a validated environment (a defineEnv() result), export the schema object instead.`
+      throw new Error(
+        `Could not load schema from ${path}: entry "${key}" is not a validator. ${hint}`,
+      )
+    }
+  }
+  return raw as SchemaDefinition
+}
+
+function processModule(mod: Record<string, unknown>, path: string): SchemaDefinition {
+  return assertValidSchema(flattenSchema(extractSchema(mod)), path)
+}
+
+export async function loadSchema(path: string, opts?: { reload?: boolean }): Promise<SchemaDefinition> {
+  if (opts?.reload) {
+    // Fresh module instance via a cache-busted URL. jiti cannot reload
+    // (its module registry survives new instances), so reload is native-only;
+    // callers must fall back to the previous schema when this throws.
+    // `?v=` (not the HMR-style `?t=`, which Vite strips for cache identity)
+    // busts both Node's and Vitest's module caches.
+    const url = `${pathToFileURL(path).href}?v=${Date.now()}`
+    const mod = await import(url)
+    return processModule(mod as Record<string, unknown>, path)
+  }
+  let mod: unknown
   try {
-    const mod = await import(path)
-    return flattenSchema(extractSchema(mod as Record<string, unknown>))
+    mod = await import(pathToFileURL(path).href)
   } catch (nativeErr) {
     cliLogger.debug("Native import failed, trying jiti:", nativeErr)
     try {
-      const mod = getJiti()(path)
-      return flattenSchema(extractSchema(mod as Record<string, unknown>))
+      mod = getJiti()(path)
     } catch {
       throw new Error(
         `Could not load schema from ${path}. Ensure the file exports a schema using \`export const schema = { ... }\``,
       )
     }
   }
+  return processModule(mod as Record<string, unknown>, path)
 }

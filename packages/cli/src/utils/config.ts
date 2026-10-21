@@ -12,7 +12,8 @@ const CONFIG_FILES = [
 ]
 
 const DEFAULTS: ResolvedConfig = {
-  schema: "src/env.ts",
+  // No default schema path: null lets findSchema auto-discover.
+  schema: null,
   sources: { default: ".env" },
   output: {
     example: ".env.example",
