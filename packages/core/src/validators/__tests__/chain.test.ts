@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import { number } from "../number"
 import { string } from "../string"
 
 describe("chainable methods", () => {
@@ -115,6 +116,90 @@ describe("chainable methods", () => {
       const v = string().validate(() => undefined)
       const result = v.parse(123, { key: "TEST", path: ["TEST"] })
       expect(result.success).toBe(false)
+    })
+  })
+
+  describe("refinement composition", () => {
+    const ctx = { key: "TEST", path: ["TEST"] }
+
+    it("applies every chained string refinement, not just the last", () => {
+      const v = string().url().min(1)
+      expect(v.parse("not-a-url-at-all", ctx).success).toBe(false)
+      expect(v.parse("https://example.com", ctx).success).toBe(true)
+    })
+
+    it("applies stacked min/max refinements", () => {
+      const v = string().min(5).max(8)
+      expect(v.parse("ab", ctx).success).toBe(false)
+      expect(v.parse("abcdefghi", ctx).success).toBe(false)
+      expect(v.parse("abcdef", ctx).success).toBe(true)
+    })
+
+    it("applies stacked number refinements", () => {
+      const v = number().int().positive().min(10).max(20)
+      expect(v.parse("5", ctx).success).toBe(false)
+      expect(v.parse("25", ctx).success).toBe(false)
+      expect(v.parse("12.5", ctx).success).toBe(false)
+      expect(v.parse("15", ctx).success).toBe(true)
+    })
+
+    it("supports branching from a mid-chain validator", () => {
+      const base = string().min(2)
+      const short = base.max(5)
+      const long = base.max(10)
+      expect(short.parse("abcdef", ctx).success).toBe(false)
+      expect(short.parse("abc", ctx).success).toBe(true)
+      expect(long.parse("abcdef", ctx).success).toBe(true)
+      expect(long.parse("x", ctx).success).toBe(false)
+    })
+
+    it("chains specific refinements after generic methods", () => {
+      const v = string().secret().describe("s").min(5)
+      expect(v.parse("ab", ctx).success).toBe(false)
+      expect(v.parse("abcdef", ctx).success).toBe(true)
+      expect(v.metadata.isSecret).toBe(true)
+      expect(v.metadata.description).toBe("s")
+    })
+
+    it("chains generic methods between specific refinements", () => {
+      const v = string().min(2).secret().max(5)
+      expect(v.parse("x", ctx).success).toBe(false)
+      expect(v.parse("abcdef", ctx).success).toBe(false)
+      expect(v.parse("abc", ctx).success).toBe(true)
+      expect(v.metadata.isSecret).toBe(true)
+    })
+
+    it("keeps specific methods and metadata through .default() and .validate()", () => {
+      const v = number()
+        .default(15)
+        .validate((n) => (n % 2 === 0 ? undefined : "must be even"))
+        .min(10)
+        .max(20)
+      expect(v.parse("9", ctx).success).toBe(false)
+      expect(v.parse("21", ctx).success).toBe(false)
+      expect(v.parse("13", ctx).success).toBe(false)
+      expect(v.parse("14", ctx).success).toBe(true)
+      expect(v.metadata.hasDefault).toBe(true)
+      expect(v.metadata.defaultValue).toBe(15)
+    })
+
+    it(".optional() ends the specific chain (widens T, like Zod)", () => {
+      const v = string().min(2).optional()
+      expect("min" in v).toBe(false)
+      expect("url" in v).toBe(false)
+      // Generic methods still available.
+      expect(typeof v.secret).toBe("function")
+      expect(typeof v.describe).toBe("function")
+      // Earlier refinements still enforced.
+      expect(v.parse("x", ctx).success).toBe(false)
+      expect(v.parse("abc", ctx).success).toBe(true)
+    })
+
+    it(".optional() after generic methods stays generic", () => {
+      const v = string().secret().optional()
+      expect("min" in v).toBe(false)
+      expect(v.metadata.isSecret).toBe(true)
+      expect(v.metadata.optional).toBe(true)
     })
   })
 })

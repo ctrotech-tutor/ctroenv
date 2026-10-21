@@ -28,10 +28,10 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 
 Every validator has: `.optional()`, `.default(v)`, `.describe(t)`, `.secret()`, `.validate(fn)`
 
-**IMPORTANT — Chain order:** `.min()`, `.url()`, `.email()` (validator-specific refinements) must come BEFORE `.secret()`, `.optional()`, `.describe()`. Reason: `.secret()` returns a generic `Validator & ChainableMethods` which loses type-specific methods like `.min()`.
+**Chaining:** refinements compose in any order and every step applies (`string().secret().url().min(1)` checks all three). Only `.optional()` ends the type-specific chain (widens `T`, like Zod) — put it last. Generic chain methods rebind fresh type-specific methods per step via `SpecificMethods`; `.optional()` deliberately passes none.
 
-✅ Correct: `string().min(32).secret()`
-❌ Wrong: `string().secret().min(32)` — `.min()` won't exist
+✅ Correct: `string().min(32).secret()`, `string().secret().min(32)`
+❌ Wrong: `string().optional().min(32)` — `.min()` won't exist
 
 ### defineEnv()
 

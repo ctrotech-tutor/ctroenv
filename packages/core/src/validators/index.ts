@@ -1,5 +1,5 @@
 export { type BooleanValidator, boolean } from "./boolean"
-export { applyChain, type ChainableMethods } from "./chain"
+export { applyChain, type ChainableMethods, type SpecificMethods } from "./chain"
 export { createValidator } from "./factory"
 export { type IpValidator, ip, ipv4, ipv6 } from "./ip"
 export { type NumberValidator, number } from "./number"

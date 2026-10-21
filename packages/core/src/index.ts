@@ -36,6 +36,7 @@ export type {
   NumberValidator,
   PickValidator,
   SemverValidator,
+  SpecificMethods,
   StringValidator,
   UuidValidator,
 } from "./validators"

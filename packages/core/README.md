@@ -62,14 +62,18 @@ env.NODE_ENV     // "development" | "staging" | "production"
 
 Every validator supports: `.optional()`, `.default(v)`, `.describe(text)`, `.secret()`, `.validate(fn)`
 
-> **Chain order matters:** Validator-specific refinements (`.url()`, `.min()`, `.email()`, etc.) must come **before** `.secret()`, `.optional()`, or `.describe()`. Reason: `.secret()` returns a generic wrapper that loses type-specific methods.
+> **Chaining:** refinements compose in any order and every step applies — `string().secret().url().min(1)` checks all three. Only `.optional()` ends the type-specific chain (it widens the value type to include `undefined`, like Zod), so put it last.
 
 ```ts
-// ✅ Correct
+// ✅ All refinements apply, in any order
 string().url().min(1).secret()
-
-// ❌ Wrong — .min() won't exist
 string().secret().url().min(1)
+
+// ✅ .optional() last
+string().min(32).optional()
+
+// ❌ .min() doesn't exist after .optional()
+string().optional().min(32)
 ```
 
 ## API
