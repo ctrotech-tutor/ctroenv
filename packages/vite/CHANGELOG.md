@@ -1,3 +1,10 @@
+# [@ctroenv/vite-v1.0.7](https://github.com/ctrotech-tutor/ctroenv/compare/vite-v1.0.6...vite-v1.0.7) (2026-10-21)
+
+
+### Bug Fixes
+
+* **vite:** load .ts schema files on Node versions without type stripping ([20b0065](https://github.com/ctrotech-tutor/ctroenv/commit/20b00657971d80c08672483ed82b52bbab9a27a0))
+
 # [@ctroenv/vite-v1.0.6](https://github.com/ctrotech-tutor/ctroenv/compare/vite-v1.0.5...vite-v1.0.6) (2026-10-21)
 
 
