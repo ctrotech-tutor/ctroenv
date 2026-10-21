@@ -50,3 +50,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Node 24 = npm 11, matching the Release job: the lockfile must be
+      # byte-identical to what the release pipeline regenerates.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --package-lock-only --no-audit --no-fund --ignore-scripts
+      - name: Fail if lockfile is stale
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::error::package-lock.json is stale. Regenerate it with npm 11 ('npm install --package-lock-only --no-audit --no-fund --ignore-scripts') and commit the result."
+            git diff -- package-lock.json
+            exit 1
+          fi

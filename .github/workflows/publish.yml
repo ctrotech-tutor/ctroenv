@@ -38,6 +38,10 @@ jobs:
       # the run green-no-ops. Sequential, in dependency order (one working
       # copy, so each run's push stays fast-forward). Release commits carry
       # [skip ci] so they don't retrigger this workflow.
+      # Each per-package run also folds a re-synced root package-lock.json into
+      # its chore commit: the exec prepareCmd regenerates and stages it, because
+      # the git plugin only sees files under the package dir and a lockfile
+      # asset could never match. The CI `lockfile` job guards the mechanism.
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
