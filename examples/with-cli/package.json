@@ -9,7 +9,8 @@
     "generate": "ctroenv generate",
     "check": "ctroenv check",
     "docs": "ctroenv docs",
-    "fix": "ctroenv validate --source .env && ctroenv generate && ctroenv docs"
+    "fix": "ctroenv validate --source .env && ctroenv generate && ctroenv docs",
+    "smoke": "cp .env.example .env && ! npm run validate --silent && sed -e '/^DATABSE_URL=/d' -e 's|^DATABASE_URL=.*|DATABASE_URL=postgresql://app:example-password@localhost:5432/app_db|' -e 's/^JWT_SECRET=.*/JWT_SECRET=local-dev-jwt-secret-not-for-production-use/' -e '$a\\' -e 'API_VERSION=1.0' .env > .env.fixed && mv .env.fixed .env && npm run validate --silent"
   },
   "dependencies": {
     "@ctroenv/core": "^1.0.0",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@ctroenv/cli": "^1.0.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.19.0"
   }
 }

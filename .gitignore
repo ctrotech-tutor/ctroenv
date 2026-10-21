@@ -8,6 +8,9 @@ dist/
 coverage/
 .turbo/
 *.log
+# Examples are verified by fresh lockless installs in CI (see examples.yml),
+# so their lockfiles are neither committed nor refreshed.
+examples/*/package-lock.json
 .DS_Store
 .vercel/
 .vscode/

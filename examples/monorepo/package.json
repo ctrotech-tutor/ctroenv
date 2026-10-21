@@ -9,7 +9,8 @@
     "start:worker": "npm run start -w packages/worker",
     "validate": "npm run validate:api && npm run validate:worker",
     "validate:api": "cd packages/api && ctroenv validate",
-    "validate:worker": "cd packages/worker && ctroenv validate"
+    "validate:worker": "cd packages/worker && ctroenv validate",
+    "smoke": "test -f .env || cp .env.example .env && npm run validate --silent && (cd packages/api; exec ../../node_modules/.bin/tsx src/index.ts & SRV=$!; trap 'kill $SRV' EXIT; sleep 10; curl -sf http://localhost:3000/health)"
   },
   "devDependencies": {
     "@ctroenv/cli": "^1.0.0",
