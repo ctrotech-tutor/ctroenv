@@ -20,7 +20,7 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 | `boolean()` | accepts `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0` | `Validator<boolean>` |
 | `pick(["a","b"])` | — | `Validator<"a" \| "b">` |
 | `semver()` | — | `Validator<string>` |
-| `ip()` | `.v4()`, `.v6()` | `Validator<string>` |
+| `ip()` / `ipv4()` / `ipv6()` | `{ version?: "4" \| "6" \| "both" }` on `ip()` | `Validator<string>` |
 | `uuid()` | — | `Validator<string>` |
 | `guid()` | — | `Validator<string>` |
 
