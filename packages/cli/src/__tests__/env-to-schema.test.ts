@@ -23,9 +23,12 @@ describe("generateSchemaFromEnv", () => {
 
     expect(result.errors).toHaveLength(0)
     expect(result.fileCount).toBe(2)
-    expect(result.code).toContain("defineEnv")
+    // Schema-only stub: importable with any environment (no defineEnv call).
+    expect(result.code).toContain("export const schema = {")
+    expect(result.code).not.toContain("defineEnv")
     expect(result.code).toContain("DATABASE_URL: string()")
     expect(result.code).toContain("PORT: number()")
+    expect(result.code).toContain('import { number, string } from "@ctroenv/core"')
   })
 
   it("infers boolean type", () => {
@@ -152,5 +155,106 @@ describe("generateSchemaFromEnv", () => {
     expect(result.errors.length).toBeGreaterThan(0)
     expect(result.fileCount).toBe(1)
     expect(result.code).toContain("GOOD: string()")
+  })
+
+  it("strips export prefixes", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "export HOST=example.com\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.code).toContain("HOST: string()")
+    expect(result.code).not.toContain("export HOST")
+  })
+
+  it("strips trailing comments before inferring types", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "PORT=3000 # the port\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.code).toContain("PORT: number()")
+  })
+
+  it("supports colon separators", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "CACHE: redis\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.code).toContain("CACHE: string()")
+  })
+
+  it("handles multiline quoted values without spurious errors", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, 'BLOCK="a\nb"\nNEXT=1\n', "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.fileCount).toBe(2)
+    expect(result.code).toContain("BLOCK: string()")
+    expect(result.code).toContain("NEXT: number()")
+  })
+
+  it("ignores comment lines inside multiline values", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, '# for block\nBLOCK="a\n# not a comment\nb"\nNEXT=1\n', "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.code).toContain("// for block")
+    expect(result.code).not.toContain("// not a comment")
+    expect(result.code.indexOf("// for block")).toBeLessThan(result.code.indexOf("BLOCK:"))
+    expect(result.code).toContain("NEXT: number()")
+  })
+
+  it("does not swallow the file after an unterminated quote", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, '# c\nU="abc\nNEXT=1\n', "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.code).toContain("// c")
+    expect(result.code).toContain("U: string()")
+    expect(result.code).toContain("NEXT: number()")
+  })
+
+  it("keeps the last value for duplicate keys", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "A=1\nA=text\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.fileCount).toBe(1)
+    expect(result.code).toContain("A: string()")
+    expect(result.code).not.toContain("A: number()")
+  })
+
+  it("drops invalid keys instead of emitting broken entries", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "FOO BAR=x\nA=1\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.fileCount).toBe(1)
+    expect(result.code).not.toContain("FOO BAR")
+    expect(result.code).toContain("A: number()")
+  })
+
+  it("reports colon without space as malformed", () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "C2:val\n", "utf-8")
+
+    const result = generateSchemaFromEnv(envPath)
+
+    expect(result.fileCount).toBe(0)
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]).toContain('no "=" found')
   })
 })

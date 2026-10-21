@@ -1,3 +1,4 @@
+import { parse as dotenvParse } from "dotenv"
 import { describe, expect, it } from "vitest"
 import { parseEnvFile } from "../index"
 
@@ -82,14 +83,18 @@ describe("parseEnvFile", () => {
     expect(result).toEqual({ KEY: "value_$NONEXISTENT" })
   })
 
-  it("handles escaped quotes inside quoted values", () => {
+  it("handles escaped quotes inside double-quoted values", () => {
+    // CtroEnv intentionally unescapes `\"` (dotenv keeps it literal) to match
+    // shell, Python, and Ruby dotenv behaviour. See DEVIATION_CASES below.
     const result = parseEnvFile('KEY="value \\"quoted\\" here"')
     expect(result).toEqual({ KEY: 'value "quoted" here' })
   })
 
-  it("handles escaped single quotes inside single-quoted values", () => {
+  it("keeps single-quoted values literal (dotenv parity)", () => {
+    // Single quotes are literal: no escape processing, matching dotenv and
+    // shell. Use double quotes when escapes are needed.
     const result = parseEnvFile("KEY='it\\'s fine'")
-    expect(result).toEqual({ KEY: "it's fine" })
+    expect(result).toEqual({ KEY: "it\\'s fine" })
   })
 
   it("skips lines without equals sign", () => {
@@ -170,5 +175,88 @@ describe("parseEnvFile", () => {
     const result = parseEnvFile("TEST_SHADOW=from_file\nKEY=prefix_$TEST_SHADOW")
     expect(result).toEqual({ TEST_SHADOW: "from_file", KEY: "prefix_from_file" })
     delete process.env.TEST_SHADOW
+  })
+})
+
+describe("dotenv parity", () => {
+  // Every fixture here must parse IDENTICALLY to dotenv. This suite runs the
+  // real dotenv parser live, so drift on either side fails loudly. Fixtures
+  // must not contain `$` (ctroenv interpolates; dotenv does not) and must not
+  // depend on ambient process.env.
+  const PARITY_CASES: Array<{ name: string; content: string }> = [
+    { name: "hash without preceding space truncates", content: "KEY=password#123" },
+    { name: "hash with preceding space truncates", content: "KEY=value # comment" },
+    { name: "value ending in hash", content: "KEY=a#" },
+    { name: "hash-only value is empty", content: "KEY=#" },
+    { name: "first hash wins", content: "KEY=a#b#c" },
+    { name: "hash inside double quotes is kept", content: 'KEY="a#b"' },
+    { name: "hash inside single quotes is kept", content: "KEY='a#b'" },
+    { name: "hash inside backticks is kept", content: "KEY=`a#b`" },
+    { name: "colon separator", content: "KEY: val" },
+    { name: "colon separator keeps equals in value", content: "A: B=C" },
+    { name: "colon without trailing space is skipped", content: "KEY:val" },
+    { name: "space before colon is skipped", content: "KEY : val" },
+    { name: "key with space is skipped", content: "my key=v" },
+    { name: "empty key is skipped", content: "=v" },
+    { name: "colon inside key is skipped", content: "K:E=Y" },
+    { name: "dotted and dashed keys", content: "my.key=v\nmy-key=w" },
+    { name: "export with tab separator", content: "export\tKEY=val" },
+    { name: "export as key name", content: "export=1" },
+    { name: "single quotes are fully literal", content: "KEY='a\\nb\\'c'" },
+    { name: "backticks are fully literal", content: "KEY=`a\\nb`" },
+    { name: "double quotes expand carriage return", content: 'KEY="a\\rb"' },
+    { name: "double quotes keep backslash-quote literal", content: 'KEY="it\\\'s"' },
+    { name: "junk after closing quote keeps line unquoted", content: 'KEY="a" junk' },
+    { name: "two quoted segments on one line", content: 'KEY="a" "b"' },
+    { name: "escapes expand in junk fallback", content: 'KEY="a\\nb" junk' },
+    { name: "escaped quote in junk fallback stays literal", content: 'KEY="a\\" "b"' },
+    { name: "junk after single-quoted close", content: "KEY='a' junk" },
+    { name: "two single-quoted segments", content: "KEY='a' 'b'" },
+    { name: "junk after backtick close", content: "KEY=`a` junk" },
+    { name: "unterminated quote keeps stray quote", content: 'KEY="oops' },
+    { name: "multiline double quotes", content: 'KEY="a\nb"' },
+    { name: "multiline single quotes", content: "KEY='a\nb'" },
+    { name: "multiline backticks", content: "KEY=`a\nb`" },
+    { name: "unterminated multiline keeps first line", content: 'KEY="a\nb' },
+    {
+      name: "junk after multiline close falls back to first line",
+      content: 'KEY="a\nb" junk\nNEXT=1',
+    },
+    { name: "lone carriage returns split lines", content: "A=1\rB=2" },
+    { name: "later duplicate wins", content: "A=1\nA=2" },
+  ]
+
+  it.each(PARITY_CASES)("parses like dotenv: $name", ({ content }) => {
+    expect(parseEnvFile(content)).toEqual(dotenvParse(content))
+  })
+
+  // Intentional, documented deviations from dotenv. Each asserts ctroenv's
+  // behaviour AND that dotenv still differs, so if dotenv ever converges the
+  // test tells us the deviation (and the README) can be retired.
+  const DEVIATION_CASES: Array<{
+    name: string
+    content: string
+    expected: Record<string, string>
+  }> = [
+    {
+      name: "interpolates $VAR references",
+      content: "A=1\nKEY=x$A",
+      expected: { A: "1", KEY: "x1" },
+    },
+    {
+      name: "joins trailing-backslash continuations",
+      content: "KEY=one\\\n  two",
+      expected: { KEY: "one\ntwo" },
+    },
+    {
+      name: "unescapes double quotes inside double-quoted values",
+      content: 'KEY="say \\"hi\\""',
+      expected: { KEY: 'say "hi"' },
+    },
+  ]
+
+  it.each(DEVIATION_CASES)("documented deviation holds: $name", ({ content, expected }) => {
+    expect(parseEnvFile(content)).toEqual(expected)
+    expect(dotenvParse(content)).not.toEqual(expected)
   })
 })

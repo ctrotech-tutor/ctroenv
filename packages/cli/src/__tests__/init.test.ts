@@ -159,4 +159,49 @@ describe("init command", () => {
 
     expect(code).toBe(ExitCode.ConfigError)
   })
+
+  it("refuses to overwrite an existing config file without --force", async () => {
+    const filePath = resolve(TMP, "ctroenv.config.ts")
+    writeFileSync(filePath, "// precious user config\n", "utf-8")
+
+    const code = await initCommand({ format: "ts", minimal: true, cwd: TMP })
+
+    expect(code).toBe(ExitCode.ConfigError)
+    expect(readFileSync(filePath, "utf-8")).toBe("// precious user config\n")
+  })
+
+  it("refuses to overwrite an existing src/env.ts from --from-env without --force", async () => {
+    writeFileSync(resolve(TMP, ".env"), "PORT=4000\n", "utf-8")
+    const schemaPath = resolve(TMP, "src", "env.ts")
+    mkdirSync(resolve(TMP, "src"), { recursive: true })
+    writeFileSync(schemaPath, "// precious user schema\n", "utf-8")
+
+    const code = await initCommand({
+      format: "ts",
+      minimal: false,
+      cwd: TMP,
+      fromEnv: ".env",
+    })
+
+    expect(code).toBe(ExitCode.ConfigError)
+    expect(readFileSync(schemaPath, "utf-8")).toBe("// precious user schema\n")
+  })
+
+  it("overwrites existing files with --force", async () => {
+    const configPath = resolve(TMP, "ctroenv.config.ts")
+    writeFileSync(configPath, "// old\n", "utf-8")
+    writeFileSync(resolve(TMP, ".env"), "PORT=4000\n", "utf-8")
+    const schemaPath = resolve(TMP, "src", "env.ts")
+    mkdirSync(resolve(TMP, "src"), { recursive: true })
+    writeFileSync(schemaPath, "// old\n", "utf-8")
+
+    expect(await initCommand({ format: "ts", minimal: true, cwd: TMP, force: true })).toBe(
+      ExitCode.Success,
+    )
+    expect(readFileSync(configPath, "utf-8")).toContain("defineConfig")
+    expect(
+      await initCommand({ format: "ts", minimal: false, cwd: TMP, fromEnv: ".env", force: true }),
+    ).toBe(ExitCode.Success)
+    expect(readFileSync(schemaPath, "utf-8")).toContain("export const schema")
+  })
 })

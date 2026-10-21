@@ -1,3 +1,4 @@
+import type { EnvMeta } from "./env-meta"
 import type { ClientServerSchema } from "./schema"
 import type { Validator } from "./validator"
 
@@ -18,4 +19,6 @@ export type InferredClientServerEnv<S extends ClientServerSchema> = {
   readonly [K in keyof S["server"]]: S["server"][K] extends Validator<infer V> ? V : never
 } & {
   readonly [K in keyof S["client"]]: S["client"][K] extends Validator<infer V> ? V : never
+} & {
+  readonly meta: EnvMeta
 }

@@ -72,4 +72,21 @@ describe("generate command", () => {
     const content = readFileSync(outputPath, "utf-8")
     expect(content).toContain("# JWT_SECRET=")
   })
+
+  it("masks secret defaults in comments", async () => {
+    const outputPath = resolve(TMP, ".env.example")
+    await generateCommand({
+      schema: {
+        API_KEY: string().secret().default("sk-live-secret-value"),
+        PORT: number().port().default(3000),
+      },
+      output: outputPath,
+      noComments: false,
+    })
+    const content = readFileSync(outputPath, "utf-8")
+    expect(content).toContain("# Default: (masked — secret)")
+    expect(content).not.toContain("sk-live-secret-value")
+    expect(content).toContain("# API_KEY=")
+    expect(content).toContain("# Default: 3000")
+  })
 })

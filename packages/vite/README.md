@@ -58,9 +58,18 @@ interface CtroEnvPluginOptions {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `schema` | `string \| SchemaDefinition` | — | Path to schema module or inline definition |
+| `schema` | `string \| SchemaDefinition` | — | Path to schema module (resolved against Vite `root`) or inline definition |
 | `failOnError` | `boolean` | `true` | When `false`, validation failures become warnings |
 | `maskWith` | `string` | `"********"` | Custom string for masking `.secret()` values |
+
+### Where validation reads values
+
+The plugin validates against the same values your app will see, using Vite's own `.env` loader with your resolved `mode`, `envDir`, and `envPrefix`:
+
+1. `.env`, `.env.local`, `.env.[mode]`, `.env.[mode].local` (later files win; actual `VITE_*` process vars win over files — standard Vite precedence).
+2. Full `process.env` fallback, so server-side and non-prefixed vars provided via the shell still validate.
+
+Note that Vite never exposes non-prefixed file-only vars at runtime, so a schema entry that exists only as a non-prefixed `.env` line is correctly reported as missing — export it or prefix it with `VITE_`.
 
 ### `viteSource`
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { string } from "../../../core/src"
 import { defineEnv } from "../index"
 
@@ -39,6 +39,45 @@ describe("defineEnv (Next.js)", () => {
     const env = defineEnv(schema)
     expect(env.meta.has("DATABASE_URL")).toBe(true)
     expect(env.meta.has("NONEXISTENT")).toBe(false)
+  })
+
+  it("exposes client vars via env.meta.get() on the server", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.get("NEXT_PUBLIC_API_URL")).toBe("https://api.example.com")
+  })
+
+  it("env.meta.has() covers client keys on the server", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.has("NEXT_PUBLIC_API_URL")).toBe(true)
+  })
+
+  it("env.meta.keys() includes server and client keys on the server", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.keys()).toEqual(["DATABASE_URL", "JWT_SECRET", "NEXT_PUBLIC_API_URL"])
+  })
+
+  it("env.meta.toJSON() includes all keys with secrets masked", () => {
+    const env = defineEnv(schema)
+    expect(env.meta.toJSON()).toEqual({
+      DATABASE_URL: "postgres://localhost:5432/db",
+      JWT_SECRET: "********",
+      NEXT_PUBLIC_API_URL: "https://api.example.com",
+    })
+  })
+
+  it("deduplicates keys present in both server and client schemas", () => {
+    process.env.SHARED = "yes"
+    try {
+      const env = defineEnv({
+        server: { SHARED: string() },
+        client: { SHARED: string() },
+      })
+      expect(env.meta.keys()).toEqual(["SHARED"])
+      expect(env.meta.get("SHARED")).toBe("yes")
+      expect(env.SHARED).toBe("yes")
+    } finally {
+      delete process.env.SHARED
+    }
   })
 
   it("allows access to client vars from any environment", () => {
@@ -118,5 +157,32 @@ describe("defineEnv (Next.js)", () => {
   it("returns undefined for missing key access", () => {
     const env = defineEnv(schema)
     expect((env as Record<string, unknown>).NONEXISTENT).toBeUndefined()
+  })
+
+  describe("client environment", () => {
+    beforeEach(() => {
+      vi.stubGlobal("window", {})
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it("throws when accessing server vars on the client", () => {
+      const env = defineEnv(schema)
+      expect(() => env.DATABASE_URL).toThrow(/not accessible on the client/)
+      expect(env.NEXT_PUBLIC_API_URL).toBe("https://api.example.com")
+    })
+
+    it("exposes only client keys via meta on the client", () => {
+      const env = defineEnv(schema)
+      expect(env.meta.get("NEXT_PUBLIC_API_URL")).toBe("https://api.example.com")
+      expect(env.meta.get("DATABASE_URL")).toBeUndefined()
+      expect(env.meta.get("JWT_SECRET")).toBeUndefined()
+      expect(env.meta.has("JWT_SECRET")).toBe(false)
+      expect(env.meta.keys()).toEqual(["NEXT_PUBLIC_API_URL"])
+      expect(env.meta.toJSON()).toEqual({ NEXT_PUBLIC_API_URL: "https://api.example.com" })
+      expect(JSON.stringify(env)).not.toContain("super-secret")
+    })
   })
 })

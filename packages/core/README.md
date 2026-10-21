@@ -62,14 +62,18 @@ env.NODE_ENV     // "development" | "staging" | "production"
 
 Every validator supports: `.optional()`, `.default(v)`, `.describe(text)`, `.secret()`, `.validate(fn)`
 
-> **Chain order matters:** Validator-specific refinements (`.url()`, `.min()`, `.email()`, etc.) must come **before** `.secret()`, `.optional()`, or `.describe()`. Reason: `.secret()` returns a generic wrapper that loses type-specific methods.
+> **Chaining:** refinements compose in any order and every step applies — `string().secret().url().min(1)` checks all three. Only `.optional()` ends the type-specific chain (it widens the value type to include `undefined`, like Zod), so put it last.
 
 ```ts
-// ✅ Correct
+// ✅ All refinements apply, in any order
 string().url().min(1).secret()
-
-// ❌ Wrong — .min() won't exist
 string().secret().url().min(1)
+
+// ✅ .optional() last
+string().min(32).optional()
+
+// ❌ .min() doesn't exist after .optional()
+string().optional().min(32)
 ```
 
 ## API
@@ -88,6 +92,8 @@ const env = defineEnv(
   { source: loadEnv(), prefix: "MY_APP_", maskWith: "***" },
 )
 ```
+
+Secrets (`.secret()`) are masked on property access, `JSON.stringify(env)`, `console.log(env)`, `env.meta.toJSON()`, and validation errors. Read the raw value explicitly with `env.meta.get("KEY")` — never log its result.
 
 ### `watchEnv(schema, opts?)`
 
@@ -185,7 +191,7 @@ try {
 | `SchemaDefinition` | Object mapping keys to validators |
 | `Validator<T>` | Generic validator type with metadata |
 | `EnvResult<T>` | Read-only env object with inferred types |
-| `EnvMeta` | Metadata accessor: `.get()`, `.has()`, `.keys()`, `.toJSON()` |
+| `EnvMeta` | Metadata accessor: `.get()` reads raw values (the secret accessor — never log it), `.has()`, `.keys()`, `.toJSON()` with secrets masked |
 | `EnvSource` | Source interface: `{ get(key: string): string \| undefined }` |
 | `ClientServerSchema` | `{ client: SchemaDefinition, server: SchemaDefinition }` |
 | `InferredClientServerEnv<T>` | Merged inferred type from client/server schemas |

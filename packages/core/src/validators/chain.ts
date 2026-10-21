@@ -12,23 +12,43 @@ export interface ChainableMethods<T> {
   ): Validator<T> & ChainableMethods<T>
 }
 
-export function applyChain<T>(validator: Validator<T>): Validator<T> & ChainableMethods<T> {
-  function withNewMetadata(overrides: Partial<Validator<T>["metadata"]>): Validator<T> {
-    return {
+export type SpecificMethods<T> = (
+  current: Validator<T>,
+) => Record<string, (...args: never[]) => unknown>
+
+/**
+ * Attach the generic chain methods (`.optional()`, `.default()`, …) to a
+ * validator. Builders with type-specific methods (`.min()`, `.url()`, …)
+ * pass a `methods` factory so every step rebinds fresh methods closing over
+ * the current validator — refinements then compose in any order, and only
+ * `.optional()` (which widens `T`, like Zod) ends the specific chain.
+ */
+export function applyChain<T>(
+  validator: Validator<T>,
+  methods?: SpecificMethods<T>,
+): Validator<T> & ChainableMethods<T> {
+  const chainable = validator as Validator<T> & ChainableMethods<T>
+  if (methods) {
+    Object.assign(chainable, methods(validator))
+  }
+
+  function step(
+    overrides: Partial<Validator<T>["metadata"]>,
+    preserveMethods: boolean,
+  ): Validator<T> & ChainableMethods<T> {
+    const next: Validator<T> = {
       _type: validator._type,
       parse(input, context) {
         return validator.parse(input, context)
       },
       metadata: { ...validator.metadata, ...overrides },
     }
+    return applyChain(next, preserveMethods ? methods : undefined)
   }
 
-  const chainable = validator as Validator<T> & ChainableMethods<T>
-
+  // .optional() widens T and ends the specific chain (no methods rebound).
   chainable.optional = () =>
-    applyChain(withNewMetadata({ optional: true, hasDefault: false })) as unknown as Validator<
-      T | undefined
-    > &
+    step({ optional: true, hasDefault: false }, false) as unknown as Validator<T | undefined> &
       ChainableMethods<T | undefined>
 
   chainable.default = (value: T) => {
@@ -43,14 +63,12 @@ export function applyChain<T>(validator: Validator<T>): Validator<T> & Chainable
         )
       }
     }
-    return applyChain(
-      withNewMetadata({ hasDefault: true, defaultValue: value, optional: false }),
-    ) as unknown as Validator<T> & ChainableMethods<T>
+    return step({ hasDefault: true, defaultValue: value, optional: false }, true)
   }
 
-  chainable.describe = (text: string) => applyChain(withNewMetadata({ description: text }))
+  chainable.describe = (text: string) => step({ description: text }, true)
 
-  chainable.secret = () => applyChain(withNewMetadata({ isSecret: true }))
+  chainable.secret = () => step({ isSecret: true }, true)
 
   chainable.validate = (
     fn: (value: T, context: { key: string; path: readonly string[] }) => string | undefined,
@@ -76,7 +94,7 @@ export function applyChain<T>(validator: Validator<T>): Validator<T> & Chainable
       },
       metadata: original.metadata,
     }
-    return applyChain(wrapped)
+    return applyChain(wrapped, methods)
   }
 
   return chainable

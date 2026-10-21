@@ -28,7 +28,7 @@ function generateEnvContent(schema: SchemaDefinition, noComments: boolean): stri
       lines.push(`# Required: ${meta.optional ? "no" : "yes"}`)
       lines.push(`# Type: ${meta.typeLabel}`)
       if (meta.hasDefault) {
-        lines.push(`# Default: ${String(meta.defaultValue)}`)
+        lines.push(`# Default: ${meta.isSecret ? "(masked — secret)" : String(meta.defaultValue)}`)
       }
       if (meta.isSecret) {
         lines.push("# (secret — do not commit this value)")

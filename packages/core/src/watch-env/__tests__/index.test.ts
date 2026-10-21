@@ -62,7 +62,7 @@ describe("watchEnv()", () => {
     expect(env.meta.has("KEY")).toBe(true)
     expect(env.meta.has("MISSING")).toBe(false)
     expect(env.meta.keys()).toEqual(["KEY", "SECRET"])
-    expect(env.meta.toJSON()).toEqual({ KEY: "hello", SECRET: "shh" })
+    expect(env.meta.toJSON()).toEqual({ KEY: "hello", SECRET: "********" })
     env.unwatch()
   })
 

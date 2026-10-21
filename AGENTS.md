@@ -20,7 +20,7 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 | `boolean()` | accepts `true`/`false`, `"true"`/`"false"`, `"yes"`/`"no"`, `"on"`/`"off"`, `1`/`0` | `Validator<boolean>` |
 | `pick(["a","b"])` | — | `Validator<"a" \| "b">` |
 | `semver()` | — | `Validator<string>` |
-| `ip()` | `.v4()`, `.v6()` | `Validator<string>` |
+| `ip()` / `ipv4()` / `ipv6()` | `{ version?: "4" \| "6" \| "both" }` on `ip()` | `Validator<string>` |
 | `uuid()` | — | `Validator<string>` |
 | `guid()` | — | `Validator<string>` |
 
@@ -28,10 +28,10 @@ TypeScript-first environment variable management. Zero-dependency core. Framewor
 
 Every validator has: `.optional()`, `.default(v)`, `.describe(t)`, `.secret()`, `.validate(fn)`
 
-**IMPORTANT — Chain order:** `.min()`, `.url()`, `.email()` (validator-specific refinements) must come BEFORE `.secret()`, `.optional()`, `.describe()`. Reason: `.secret()` returns a generic `Validator & ChainableMethods` which loses type-specific methods like `.min()`.
+**Chaining:** refinements compose in any order and every step applies (`string().secret().url().min(1)` checks all three). Only `.optional()` ends the type-specific chain (widens `T`, like Zod) — put it last. Generic chain methods rebind fresh type-specific methods per step via `SpecificMethods`; `.optional()` deliberately passes none.
 
-✅ Correct: `string().min(32).secret()`
-❌ Wrong: `string().secret().min(32)` — `.min()` won't exist
+✅ Correct: `string().min(32).secret()`, `string().secret().min(32)`
+❌ Wrong: `string().optional().min(32)` — `.min()` won't exist
 
 ### defineEnv()
 
@@ -125,8 +125,8 @@ catch (e) {
 
 | Package | Import | Source |
 |---------|--------|--------|
-| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` for system env |
-| `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `import.meta.env` |
+| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` uses Node's loader; `parseEnvFile()` grammar is pinned to `dotenv` by a live parity suite (`dotenv` devDep) — keep deviations minimal and documented |
+| `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `viteSource()`: `import.meta.env` → `process.env`; plugin: Vite `loadEnv()` + `process.env` |
 | `@ctroenv/nextjs` | `defineEnv()`, `withCtroEnv()` | Server/client split |
 
 ### CLI (`@ctroenv/cli`)

@@ -30,7 +30,8 @@ function generateMarkdown(schema: SchemaDefinition): string {
     lines.push(`- **Required:** ${meta.optional ? "No" : "Yes"}`)
 
     if (meta.hasDefault) {
-      lines.push(`- **Default:** \`${String(meta.defaultValue)}\``)
+      const shown = meta.isSecret ? "(masked — secret)" : String(meta.defaultValue)
+      lines.push(`- **Default:** \`${shown}\``)
     }
 
     if (meta.description) {
@@ -50,12 +51,16 @@ function generateMarkdown(schema: SchemaDefinition): string {
 function generateJson(schema: SchemaDefinition): string {
   const variables = Object.entries(schema).map(([key, validator]) => {
     const meta = validator.metadata
+    let defaultValue: unknown = null
+    if (meta.hasDefault) {
+      defaultValue = meta.isSecret ? "********" : meta.defaultValue
+    }
     return {
       key,
       type: meta.typeLabel,
       required: !meta.optional && !meta.hasDefault,
       description: meta.description ?? null,
-      default: meta.hasDefault ? meta.defaultValue : null,
+      default: defaultValue,
       isSecret: meta.isSecret,
     }
   })

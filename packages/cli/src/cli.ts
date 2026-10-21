@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import type { SchemaDefinition } from "@ctroenv/core"
 import { Command } from "commander"
 import { checkCommand } from "./commands/check"
@@ -39,9 +40,19 @@ async function setupCommand(
     const config = resolveConfig(cwd, { schema: opts.schema as string | undefined })
     const schemaPath = findSchema(cwd, config.schema)
     if (!schemaPath) {
-      process.stderr.write(
-        `${errorMsg("Could not find schema file.")}\n${hint("Create src/env.ts or run: ctroenv init")}\n`,
-      )
+      if (typeof opts.schema === "string") {
+        process.stderr.write(
+          `${errorMsg(`Could not find schema file: ${resolve(cwd, opts.schema)}`)}\n${hint("Check the --schema path.")}\n`,
+        )
+      } else if (config.schema) {
+        process.stderr.write(
+          `${errorMsg(`Could not find schema file: ${resolve(cwd, config.schema)}`)}\n${hint("Check the schema path in your ctroenv config.")}\n`,
+        )
+      } else {
+        process.stderr.write(
+          `${errorMsg("Could not find schema file.")}\n${hint("Create src/env.ts, pass --schema <path>, or run: ctroenv init")}\n`,
+        )
+      }
       process.exit(ExitCode.ConfigError)
     }
     process.stderr.write(`${hint(`Schema: ${schemaPath}`)}\n`)
@@ -73,6 +84,7 @@ program
   .option("--json", "Generate JSON config")
   .option("--minimal", "Generate minimal config")
   .option("--from-env <path>", "Generate schema stub from an env file")
+  .option("--force", "Overwrite existing files")
   .action(async (opts) => {
     if (opts.fromEnv) {
       const exitCode = await initCommand({
@@ -80,6 +92,7 @@ program
         minimal: false,
         cwd: process.cwd(),
         fromEnv: opts.fromEnv,
+        force: !!opts.force,
       })
       process.exit(exitCode)
     }
@@ -88,6 +101,7 @@ program
       format,
       minimal: !!opts.minimal,
       cwd: process.cwd(),
+      force: !!opts.force,
     })
     process.exit(exitCode)
   })
@@ -95,6 +109,7 @@ program
 program
   .command("validate")
   .description("Validate environment variables against schema")
+  .option("--schema <path>", "Path to schema file (overrides config and discovery)")
   .option("--source <path>", "Source env file (default: process.env or config sources.default)")
   .option("--watch", "Watch for changes and re-validate")
   .option("--json", "Output JSON instead of formatted text")
@@ -114,13 +129,14 @@ program
 program
   .command("generate")
   .description("Generate .env.example from schema")
-  .option("--output <path>", "Output file path", ".env.example")
+  .option("--schema <path>", "Path to schema file (overrides config and discovery)")
+  .option("--output <path>", "Output file path")
   .option("--no-comments", "Generate minimal output without comments")
   .action(async (opts) => {
-    await setupCommand(async (schema, _config, _schemaPath) => {
+    await setupCommand(async (schema, config, _schemaPath) => {
       return generateCommand({
         schema,
-        output: opts.output,
+        output: opts.output ?? config.output?.example ?? ".env.example",
         noComments: !opts.comments,
       })
     }, opts)
@@ -128,6 +144,7 @@ program
 program
   .command("check")
   .description("Compare .env against schema")
+  .option("--schema <path>", "Path to schema file (overrides config and discovery)")
   .option("--source <path>", "Source env file to check")
   .option("--strict", "Also validate values against schema")
   .option("--warn-unknown", "Warn about env vars in source not present in schema")
@@ -146,13 +163,14 @@ program
 program
   .command("docs")
   .description("Generate documentation from schema")
-  .option("--output <path>", "Output file path", "ENVIRONMENT.md")
+  .option("--schema <path>", "Path to schema file (overrides config and discovery)")
+  .option("--output <path>", "Output file path")
   .option("--format <format>", "Output format: markdown|json", "markdown")
   .action(async (opts) => {
-    await setupCommand(async (schema, _config, _schemaPath) => {
+    await setupCommand(async (schema, config, _schemaPath) => {
       return docsCommand({
         schema,
-        output: opts.output,
+        output: opts.output ?? config.output?.docs ?? "ENVIRONMENT.md",
         format: opts.format,
       })
     }, opts)
