@@ -33,8 +33,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      # semantic-release-monorepo must run once per package, from inside the
+      # package dir: from the repo root its commit filter matches nothing and
+      # the run green-no-ops. Sequential, in dependency order (one working
+      # copy, so each run's push stays fast-forward). Release commits carry
+      # [skip ci] so they don't retrigger this workflow.
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
-        run: npx semantic-release --extends semantic-release-monorepo
+        run: |
+          for pkg in shared core cli node vite nextjs; do
+            (cd packages/$pkg && npx --no-install semantic-release)
+          done
