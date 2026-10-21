@@ -1,14 +1,27 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import type { EnvSource } from "@ctroenv/core"
 
 export type { EnvSource }
 
 export interface LoadEnvOptions {
+  /** Directory holding `.env` files, or a single `.env` file. Defaults to `process.cwd()`. */
   path?: string
+  /** File encoding for the built-in parser. Defaults to `"utf-8"`. Ignored with `native`. */
   encoding?: BufferEncoding
+  /** Prefer file values over `process.env` (default: `process.env` wins, dotenv-style). */
   override?: boolean
+  /**
+   * With `override`, fall back to `process.env` for keys missing from files.
+   * Has no effect on its own: `process.env` already takes precedence by default.
+   */
   system?: boolean
+  /**
+   * Load via Node's `process.loadEnvFile()` (Node 21.7+) instead of the
+   * built-in parser. Never overrides existing variables; `override`, `system`,
+   * and `encoding` do not apply. Warns and falls back to the built-in parser
+   * when Node's loader is unavailable or fails.
+   */
   native?: boolean
 }
 
@@ -237,32 +250,55 @@ function interpolate(value: string, env: Record<string, string>): string {
     .join("$")
 }
 
-const ENV_FILES = [".env", `.env.${process.env.NODE_ENV ?? "development"}`, ".env.local"]
-
-function resolveFiles(root: string): string[] {
-  return ENV_FILES.map((f) => join(root, f))
+function envFileNames(): string[] {
+  // NODE_ENV is read at call time so late assignments (and test runners that
+  // set NODE_ENV after import) pick the right file.
+  return [".env", `.env.${process.env.NODE_ENV ?? "development"}`, ".env.local"]
 }
 
+function resolveFiles(target: string): string[] {
+  try {
+    // A direct file path loads just that file; anything else is a directory
+    // holding the standard trio.
+    if (statSync(target).isFile()) return [target]
+  } catch {
+    // Missing path: fall through and treat it as a directory (no files found).
+  }
+  return envFileNames().map((f) => join(target, f))
+}
+
+/**
+ * Load `.env` files into an `EnvSource` for `defineEnv()`.
+ *
+ * From a directory, reads `.env`, `.env.{NODE_ENV}`, then `.env.local`, with
+ * later files winning. `NODE_ENV` is read when `loadEnv` runs and defaults to
+ * `"development"`. A `path` pointing at a file loads just that file.
+ */
 export function loadEnv(opts?: LoadEnvOptions): EnvSource {
-  const root = opts?.path ?? process.cwd()
+  const target = opts?.path ?? process.cwd()
   const encoding = opts?.encoding ?? "utf-8"
-  const env: Record<string, string> = {}
+  const existing = resolveFiles(target).filter((f) => existsSync(f))
 
   if (opts?.native && typeof process.loadEnvFile === "function") {
     try {
-      process.loadEnvFile(root)
+      // One call per file: loadEnvFile takes a single path, throws for
+      // missing files, and never overrides existing variables — so load in
+      // reverse priority order to match the built-in parser (.env.local wins).
+      for (const file of [...existing].reverse()) {
+        process.loadEnvFile(file)
+      }
       return nodeSource()
     } catch {
-      // Fall through to custom parsing
+      console.warn(
+        "[ctroenv] process.loadEnvFile() failed; falling back to the built-in .env parser.",
+      )
     }
   }
 
-  for (const filePath of resolveFiles(root)) {
-    if (existsSync(filePath)) {
-      const content = readFileSync(filePath, encoding)
-      const parsed = parseEnvFile(content)
-      Object.assign(env, parsed)
-    }
+  const env: Record<string, string> = {}
+  for (const filePath of existing) {
+    const content = readFileSync(filePath, encoding)
+    Object.assign(env, parseEnvFile(content))
   }
 
   return {

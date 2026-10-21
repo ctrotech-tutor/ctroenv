@@ -125,7 +125,7 @@ catch (e) {
 
 | Package | Import | Source |
 |---------|--------|--------|
-| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` for system env; `parseEnvFile()` grammar is pinned to `dotenv` by a live parity suite (`dotenv` devDep) — keep deviations minimal and documented |
+| `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` uses Node's loader; `parseEnvFile()` grammar is pinned to `dotenv` by a live parity suite (`dotenv` devDep) — keep deviations minimal and documented |
 | `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `viteSource()`: `import.meta.env` → `process.env`; plugin: Vite `loadEnv()` + `process.env` |
 | `@ctroenv/nextjs` | `defineEnv()`, `withCtroEnv()` | Server/client split |
 

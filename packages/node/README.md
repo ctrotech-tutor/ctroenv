@@ -37,15 +37,15 @@ const env = defineEnv(schema, {
 loadEnv({ path?, encoding?, override?, system?, native? }): EnvSource
 ```
 
-Reads `.env`, `.env.{NODE_ENV}`, and `.env.local` files in priority order. Returns an `EnvSource` compatible with `defineEnv()`.
+Reads `.env`, `.env.{NODE_ENV}`, and `.env.local` files — later files win. `NODE_ENV` is read when `loadEnv` runs and defaults to `"development"`. Returns an `EnvSource` compatible with `defineEnv()`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `path` | `string` | `process.cwd()` | Directory to search for `.env` files |
-| `encoding` | `BufferEncoding` | `"utf-8"` | File encoding |
-| `override` | `boolean` | `false` | Prefer file values over `process.env` |
-| `system` | `boolean` | `false` | Fall back to `process.env` for missing keys |
-| `native` | `boolean` | `false` | Use Node.js built-in `process.loadEnvFile()` when available (Node 21.7+) |
+| `path` | `string` | `process.cwd()` | Directory holding `.env` files, or a single `.env` file |
+| `encoding` | `BufferEncoding` | `"utf-8"` | File encoding (ignored with `native`) |
+| `override` | `boolean` | `false` | Prefer file values over `process.env` (default: `process.env` wins, dotenv-style) |
+| `system` | `boolean` | `false` | With `override`, fall back to `process.env` for keys missing from files (no effect on its own) |
+| `native` | `boolean` | `false` | Load via Node's `process.loadEnvFile()` (Node 21.7+) instead of the built-in parser. Never overrides existing variables; `override`, `system`, and `encoding` do not apply. Warns and falls back to the built-in parser on failure |
 
 ### `nodeSource`
 
