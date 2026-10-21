@@ -208,4 +208,138 @@ describe("check command", () => {
     expect(output).toContain("did you mean")
     expect(output).toContain("DATABASE_URL")
   })
+
+  describe("--example", () => {
+    const cleanEnv = ["DATABASE_URL=postgres://localhost/db", "PORT=4000", "NODE_ENV=prod"].join(
+      "\n",
+    )
+    // Generate-style example: active defaults, commented secrets/required,
+    // descriptive prose that must never count as keys.
+    const syncedExample = [
+      "# CtroEnv — Environment Variables",
+      "# Generated from schema. Edit the schema, not this file.",
+      "",
+      "# Required: yes",
+      "# Type: string",
+      "# DATABASE_URL=",
+      "",
+      "# Required: no",
+      "# Type: number",
+      "# Default: 3000",
+      "PORT=3000",
+      "",
+      "# see the docs for details",
+      "#NODE_ENV=",
+      "",
+    ].join("\n")
+
+    function writeEnvAndExample(exampleContent: string): { envPath: string; examplePath: string } {
+      const envPath = resolve(TMP, ".env")
+      const examplePath = resolve(TMP, ".env.example")
+      writeFileSync(envPath, cleanEnv, "utf-8")
+      writeFileSync(examplePath, exampleContent, "utf-8")
+      return { envPath, examplePath }
+    }
+
+    it("passes when the example declares every variable (active + commented)", async () => {
+      const { envPath, examplePath } = writeEnvAndExample(syncedExample)
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: examplePath,
+        json: "text",
+      })
+      expect(code).toBe(ExitCode.Success)
+    })
+
+    it("fails when the example omits schema variables", async () => {
+      const { envPath, examplePath } = writeEnvAndExample("PORT=3000\n")
+      const logs: string[] = []
+      const spy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+        logs.push(String(chunk))
+        return true
+      })
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: examplePath,
+        json: "text",
+      })
+      spy.mockRestore()
+      expect(code).toBe(ExitCode.ValidationError)
+      const output = logs.join("")
+      expect(output).toContain("Example Check")
+      expect(output).toContain("DATABASE_URL")
+      expect(output).toContain("NODE_ENV")
+    })
+
+    it("fails on unknown keys in the example (active and commented)", async () => {
+      const { envPath, examplePath } = writeEnvAndExample(
+        [...syncedExample.split("\n"), "STALE_KEY=1", "# OLD_KEY="].join("\n"),
+      )
+      const logs: string[] = []
+      const spy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+        logs.push(String(chunk))
+        return true
+      })
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: examplePath,
+        json: "text",
+      })
+      spy.mockRestore()
+      expect(code).toBe(ExitCode.ValidationError)
+      const output = logs.join("")
+      expect(output).toContain("STALE_KEY")
+      expect(output).toContain("OLD_KEY")
+    })
+
+    it("treats a missing example file as fully out of sync", async () => {
+      const envPath = resolve(TMP, ".env")
+      writeFileSync(envPath, cleanEnv, "utf-8")
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: resolve(TMP, ".env.example"),
+        json: "text",
+      })
+      expect(code).toBe(ExitCode.ValidationError)
+    })
+
+    it("includes the example block in JSON output", async () => {
+      const { envPath, examplePath } = writeEnvAndExample("PORT=3000\n# DATABASE_URL=\n")
+      const logs: string[] = []
+      const spy = vi
+        .spyOn(console, "log")
+        .mockImplementation((...args) => logs.push(args.join(" ")))
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: examplePath,
+        json: "json",
+      })
+      spy.mockRestore()
+      expect(code).toBe(ExitCode.ValidationError)
+      const parsed = JSON.parse(logs[0])
+      expect(parsed.clean).toBe(false)
+      expect(parsed.example.file).toBe(examplePath)
+      expect(parsed.example.missing).toEqual(["NODE_ENV"])
+      expect(parsed.example.unknown).toEqual([])
+      expect(parsed.example.clean).toBe(false)
+    })
+
+    it("supports commented `# export KEY=` declarations", async () => {
+      const { envPath, examplePath } = writeEnvAndExample(
+        ["# export DATABASE_URL=", "PORT=3000", "#NODE_ENV="].join("\n"),
+      )
+      const code = await checkCommand({
+        schema,
+        source: envPath,
+        example: examplePath,
+        json: "text",
+      })
+      expect(code).toBe(ExitCode.Success)
+    })
+  })
 })

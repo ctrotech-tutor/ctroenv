@@ -29,6 +29,20 @@ function readEnvKeys(filePath: string): string[] {
   return Object.keys(parsed)
 }
 
+function readExampleKeys(filePath: string): string[] {
+  if (!existsSync(filePath)) return []
+  const content = readFileSync(filePath, "utf-8")
+  const keys = new Set<string>(Object.keys(parseDotenv(content)))
+  // `generate` comments out secrets and required-without-default vars
+  // (`# KEY=`), so a complete example also declares keys in comments. Only
+  // full-line `# KEY=` shapes count — descriptive prose never matches.
+  for (const match of content.matchAll(/^\s*#\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/gm)) {
+    const key = match[1]
+    if (key) keys.add(key)
+  }
+  return [...keys]
+}
+
 function readEnvValues(filePath: string): Record<string, string> {
   if (!existsSync(filePath)) return {}
   const content = readFileSync(filePath, "utf-8")
@@ -46,18 +60,26 @@ function compareKeys(schema: SchemaDefinition, envKeys: string[]): CheckResult {
   }
 }
 
-function displayHumanResult(result: CheckResult, sourceName: string): void {
-  process.stdout.write(`\n${header("Environment Check")}\n`)
-  process.stdout.write(`${hint(`Source: ${sourceName}`)}\n`)
+interface DisplayLabels {
+  title: string
+  sourceName: string
+  missing: string
+  unused: string
+  allClear: string
+}
+
+function displayHumanResult(result: CheckResult, labels: DisplayLabels): void {
+  process.stdout.write(`\n${header(labels.title)}\n`)
+  process.stdout.write(`${hint(`Source: ${labels.sourceName}`)}\n`)
   process.stdout.write(`${divider()}\n`)
 
   if (result.missing.length === 0 && result.unused.length === 0) {
-    process.stdout.write(`${success("All clear — schema and env are in sync")}\n`)
+    process.stdout.write(`${success(labels.allClear)}\n`)
     return
   }
 
   if (result.missing.length > 0) {
-    process.stdout.write(`${warning("Missing from env:")}\n`)
+    process.stdout.write(`${warning(labels.missing)}\n`)
     for (const key of result.missing) {
       process.stdout.write(`  ${key}\n`)
     }
@@ -65,7 +87,7 @@ function displayHumanResult(result: CheckResult, sourceName: string): void {
   }
 
   if (result.unused.length > 0) {
-    process.stdout.write(`${warning("Unused in env (not in schema):")}\n`)
+    process.stdout.write(`${warning(labels.unused)}\n`)
     for (const key of result.unused) {
       process.stdout.write(`  ${key}\n`)
     }
@@ -78,6 +100,14 @@ function displayHumanResult(result: CheckResult, sourceName: string): void {
 export async function checkCommand(options: CheckOptions): Promise<number> {
   const envKeys = readEnvKeys(options.source)
   const result = compareKeys(options.schema, envKeys)
+  // The example check is keys-only by design: example values are placeholders,
+  // so --strict value validation and --warn-unknown suggestions never apply.
+  const exampleResult = options.example
+    ? compareKeys(options.schema, readExampleKeys(options.example))
+    : null
+  const exampleClean =
+    exampleResult === null ||
+    (exampleResult.missing.length === 0 && exampleResult.unused.length === 0)
 
   let validationErrors: readonly ValidationError[] | null = null
   let unknownSuggestions: Array<{ key: string; suggestion: string | null }> = []
@@ -105,7 +135,20 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
     const output: Record<string, unknown> = {
       source: options.source,
       total: Object.keys(options.schema).length,
-      clean: result.missing.length === 0 && result.unused.length === 0 && !validationErrors,
+      clean:
+        result.missing.length === 0 &&
+        result.unused.length === 0 &&
+        !validationErrors &&
+        exampleClean,
+      example: exampleResult
+        ? {
+            file: options.example,
+            missing: exampleResult.missing,
+            unknown: exampleResult.unused,
+            matched: exampleResult.matched,
+            clean: exampleResult.missing.length === 0 && exampleResult.unused.length === 0,
+          }
+        : null,
       summary: {
         missing: result.missing.length,
         unused: result.unused.length,
@@ -120,7 +163,23 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
     }
     console.log(JSON.stringify(output, null, 2))
   } else {
-    displayHumanResult(result, options.source)
+    displayHumanResult(result, {
+      title: "Environment Check",
+      sourceName: options.source,
+      missing: "Missing from env:",
+      unused: "Unused in env (not in schema):",
+      allClear: "All clear — schema and env are in sync",
+    })
+
+    if (exampleResult && options.example) {
+      displayHumanResult(exampleResult, {
+        title: "Example Check",
+        sourceName: options.example,
+        missing: "Missing from example:",
+        unused: "Unknown in example (not in schema):",
+        allClear: "All clear — schema and example are in sync",
+      })
+    }
 
     if (unknownSuggestions.length > 0) {
       process.stdout.write(`\n${warning("Unknown env vars found in source (not in schema):")}\n`)
@@ -138,6 +197,9 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
   }
 
   const hasErrors =
-    result.missing.length > 0 || result.unused.length > 0 || validationErrors !== null
+    result.missing.length > 0 ||
+    result.unused.length > 0 ||
+    validationErrors !== null ||
+    !exampleClean
   return hasErrors ? ExitCode.ValidationError : ExitCode.Success
 }
