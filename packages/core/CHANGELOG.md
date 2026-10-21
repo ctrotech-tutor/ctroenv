@@ -1,3 +1,10 @@
+# [@ctroenv/core-v1.5.2](https://github.com/ctrotech-tutor/ctroenv/compare/core-v1.5.1...core-v1.5.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **core:** use import.meta member access so webpack stops warning ([8499d0e](https://github.com/ctrotech-tutor/ctroenv/commit/8499d0ea4b4756dde2e83eff9a2a3fc2295d43b5))
+
 # [@ctroenv/core-v1.5.1](https://github.com/ctrotech-tutor/ctroenv/compare/core-v1.5.0...core-v1.5.1) (2026-10-21)
 
 
