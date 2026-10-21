@@ -17,6 +17,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npm install --package-lock-only --no-audit --no-fund --ignore-scripts && git add ../../package-lock.json"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": ["package.json", "CHANGELOG.md"],
