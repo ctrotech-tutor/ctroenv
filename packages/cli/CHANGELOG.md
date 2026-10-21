@@ -1,3 +1,10 @@
+# [@ctroenv/cli-v1.4.0](https://github.com/ctrotech-tutor/ctroenv/compare/cli-v1.3.1...cli-v1.4.0) (2026-10-21)
+
+
+### Features
+
+* **cli:** implement check --example drift gate ([cce5984](https://github.com/ctrotech-tutor/ctroenv/commit/cce59849dfb0a9c6b1180ce29973493aa75e9170))
+
 # [@ctroenv/cli-v1.3.1](https://github.com/ctrotech-tutor/ctroenv/compare/cli-v1.3.0...cli-v1.3.1) (2026-10-21)
 
 
