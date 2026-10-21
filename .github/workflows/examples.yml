@@ -20,11 +20,8 @@ jobs:
           - with-cli
           - with-express
           - with-nextjs
+          - with-vite
           - monorepo
-          # TODO: add with-vite once @ctroenv/vite >= 1.0.6 is published.
-          # 1.0.5 ships a single Node entry that breaks `vite build`
-          # (see packages/vite/src/browser.ts); the example's `smoke`
-          # script is ready and verified against the fixed build.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
