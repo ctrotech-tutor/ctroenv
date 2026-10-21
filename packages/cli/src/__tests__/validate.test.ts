@@ -267,4 +267,35 @@ describe("validate command", () => {
     const output = logs.join("")
     expect(output).toContain("undefined")
   })
+
+  it("masks secret values and defaults in JSON output", async () => {
+    const envPath = resolve(TMP, ".env")
+    writeFileSync(envPath, "API_KEY=sk-from-file\n", "utf-8")
+
+    const logs: string[] = []
+    const spy = vi.spyOn(console, "log").mockImplementation((...args) => logs.push(args.join(" ")))
+
+    const code = await validateCommand({
+      schema: {
+        API_KEY: string().secret().default("sk-default-secret"),
+        PORT: number().port().default(3000),
+      },
+      source: envPath,
+      watch: false,
+      json: "json",
+      secrets: { mask: [], maskWith: "***" },
+    })
+
+    spy.mockRestore()
+
+    expect(code).toBe(ExitCode.Success)
+    expect(logs.length).toBe(1)
+    const parsed = JSON.parse(logs[0])
+    const apiKey = parsed.variables.find((v: { key: string }) => v.key === "API_KEY")
+    expect(apiKey.value).toBe("***")
+    expect(apiKey.defaultValue).toBe("***")
+    expect(JSON.stringify(parsed)).not.toContain("sk-")
+    const port = parsed.variables.find((v: { key: string }) => v.key === "PORT")
+    expect(port.defaultValue).toBe(3000)
+  })
 })

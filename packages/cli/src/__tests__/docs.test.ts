@@ -99,6 +99,62 @@ describe("docsCommand", () => {
     expect(content).toContain("Postgres connection string")
   })
 
+  it("masks secret defaults in markdown output", async () => {
+    const schema = createSchema() as unknown as Record<string, unknown>
+    schema.API_KEY = {
+      parse: () => ({ success: true, value: "" }),
+      metadata: {
+        typeLabel: "string",
+        optional: false,
+        hasDefault: true,
+        defaultValue: "sk-live-secret-value",
+        description: undefined,
+        isSecret: true,
+      },
+    }
+    const outputPath = join(tmpDir, "ENVIRONMENT.md")
+    const exitCode = await docsCommand({
+      schema: schema as unknown as import("@ctroenv/core").SchemaDefinition,
+      output: outputPath,
+      format: "markdown",
+    })
+    expect(exitCode).toBe(ExitCode.Success)
+    const content = readFileSync(outputPath, "utf-8")
+    expect(content).toContain("- **Default:** `(masked — secret)`")
+    expect(content).not.toContain("sk-live-secret-value")
+    expect(content).toContain("3000")
+  })
+
+  it("masks secret defaults in JSON output", async () => {
+    const schema = createSchema() as unknown as Record<string, unknown>
+    schema.API_KEY = {
+      parse: () => ({ success: true, value: "" }),
+      metadata: {
+        typeLabel: "string",
+        optional: false,
+        hasDefault: true,
+        defaultValue: "sk-live-secret-value",
+        description: undefined,
+        isSecret: true,
+      },
+    }
+    const outputPath = join(tmpDir, "env.json")
+    const exitCode = await docsCommand({
+      schema: schema as unknown as import("@ctroenv/core").SchemaDefinition,
+      output: outputPath,
+      format: "json",
+    })
+    expect(exitCode).toBe(ExitCode.Success)
+    const content = JSON.parse(readFileSync(outputPath, "utf-8"))
+    const apiKey = content.variables.find(
+      (v: { key: string }) => v.key === "API_KEY",
+    )
+    expect(apiKey.default).toBe("********")
+    expect(JSON.stringify(content)).not.toContain("sk-live-secret-value")
+    const port = content.variables.find((v: { key: string }) => v.key === "PORT")
+    expect(port.default).toBe(3000)
+  })
+
   it("returns error for unwritable path", async () => {
     const exitCode = await docsCommand({
       schema: createSchema(),

@@ -91,6 +91,10 @@ function displayJsonResult(
 
   const variables = Object.entries(schema).map(([key, validator]) => {
     const meta = validator.metadata
+    let defaultValue: unknown
+    if (meta.hasDefault) {
+      defaultValue = meta.isSecret ? maskWith : meta.defaultValue
+    }
     return {
       key,
       type: meta.typeLabel,
@@ -99,7 +103,7 @@ function displayJsonResult(
       description: meta.description,
       isSecret: meta.isSecret,
       hasDefault: meta.hasDefault,
-      defaultValue: meta.defaultValue,
+      defaultValue,
     }
   })
 

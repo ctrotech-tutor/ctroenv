@@ -1,6 +1,10 @@
 import type { EnvMeta } from "../types"
 
-export function createMeta(values: Record<string, unknown>): EnvMeta {
+export function createMeta(
+  values: Record<string, unknown>,
+  secretKeys: Set<string> = new Set(),
+  mask = "********",
+): EnvMeta {
   const meta: EnvMeta = {
     get(key: string): string | undefined {
       const v = values[key]
@@ -15,7 +19,9 @@ export function createMeta(values: Record<string, unknown>): EnvMeta {
     toJSON(): Record<string, string | undefined> {
       const result: Record<string, string | undefined> = {}
       for (const [k, v] of Object.entries(values)) {
-        result[k] = v !== undefined ? String(v) : undefined
+        // toJSON fires implicitly via JSON.stringify — secrets must be masked
+        // here. Raw access stays explicit through get().
+        result[k] = v !== undefined ? (secretKeys.has(k) ? mask : String(v)) : undefined
       }
       return result
     },
@@ -35,7 +41,7 @@ export function createMaskedEnv(
   configurableMask?: string,
   extraMethods?: Record<string, ExtraMethod>,
 ): Record<string, unknown> & { meta: EnvMeta } {
-  const meta = createMeta(values)
+  const meta = createMeta(values, secretKeys, configurableMask ?? defaultMask)
 
   function maskFor(key: string | symbol): string {
     if (typeof key !== "string") return defaultMask

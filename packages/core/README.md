@@ -89,6 +89,8 @@ const env = defineEnv(
 )
 ```
 
+Secrets (`.secret()`) are masked on property access, `JSON.stringify(env)`, `console.log(env)`, `env.meta.toJSON()`, and validation errors. Read the raw value explicitly with `env.meta.get("KEY")` — never log its result.
+
 ### `watchEnv(schema, opts?)`
 
 Re-validates environment variables when the source changes. Useful for long-running processes (servers, CLIs, watchers).
@@ -185,7 +187,7 @@ try {
 | `SchemaDefinition` | Object mapping keys to validators |
 | `Validator<T>` | Generic validator type with metadata |
 | `EnvResult<T>` | Read-only env object with inferred types |
-| `EnvMeta` | Metadata accessor: `.get()`, `.has()`, `.keys()`, `.toJSON()` |
+| `EnvMeta` | Metadata accessor: `.get()` reads raw values (the secret accessor — never log it), `.has()`, `.keys()`, `.toJSON()` with secrets masked |
 | `EnvSource` | Source interface: `{ get(key: string): string \| undefined }` |
 | `ClientServerSchema` | `{ client: SchemaDefinition, server: SchemaDefinition }` |
 | `InferredClientServerEnv<T>` | Merged inferred type from client/server schemas |

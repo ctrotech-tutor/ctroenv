@@ -278,10 +278,30 @@ describe("defineEnv()", () => {
       expect(json).not.toContain("meta")
     })
 
-    it("does not mask secrets in meta.toJSON()", () => {
+    it("masks secrets in meta.toJSON()", () => {
+      const env = defineEnv(
+        { PUBLIC: string(), SECRET: string().secret() },
+        { source: { PUBLIC: "hello", SECRET: "hidden" } },
+      )
+      // toJSON fires implicitly via JSON.stringify — it must never leak.
+      // Raw access stays explicit through meta.get().
+      expect(env.meta.toJSON()).toEqual({ PUBLIC: "hello", SECRET: "********" })
+      expect(env.meta.get("SECRET")).toBe("hidden")
+    })
+
+    it("masks secrets when JSON.stringify is called on env.meta", () => {
       const env = defineEnv({ SECRET: string().secret() }, { source: { SECRET: "hidden" } })
-      // meta.toJSON() returns string values of all keys (for serialization)
-      expect(env.meta.toJSON()).toEqual({ SECRET: "hidden" })
+      const json = JSON.stringify({ meta: env.meta })
+      expect(json).not.toContain("hidden")
+      expect(json).toContain('"SECRET":"********"')
+    })
+
+    it("honours maskWith in meta.toJSON()", () => {
+      const env = defineEnv(
+        { SECRET: string().secret() },
+        { source: { SECRET: "hidden" }, maskWith: "***" },
+      )
+      expect(env.meta.toJSON()).toEqual({ SECRET: "***" })
     })
 
     it("masks secret values in error output", () => {
