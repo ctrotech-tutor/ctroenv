@@ -23,7 +23,8 @@
     "dist"
   ],
   "dependencies": {
-    "@ctroenv/core": "^1.0.0"
+    "@ctroenv/core": "^1.0.0",
+    "jiti": "^2.7.0"
   },
   "scripts": {
     "build": "tsup",

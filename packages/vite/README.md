@@ -58,7 +58,7 @@ interface CtroEnvPluginOptions {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `schema` | `string \| SchemaDefinition` | — | Path to schema module (resolved against Vite `root`) or inline definition |
+| `schema` | `string \| SchemaDefinition` | — | Path to schema module (resolved against Vite `root`) or inline definition. TypeScript schemas work on every supported Node version (loaded via `jiti`); plain JS uses the native loader. |
 | `failOnError` | `boolean` | `true` | When `false`, validation failures become warnings |
 | `maskWith` | `string` | `"********"` | Custom string for masking `.secret()` values |
 
