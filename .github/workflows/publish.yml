@@ -46,3 +46,9 @@ jobs:
           for pkg in shared core cli node vite nextjs; do
             (cd packages/$pkg && npx --no-install semantic-release)
           done
+
+      # A tagged-but-unpublished version must fail the run loudly: compare
+      # the tags this run created against the registry (with a generous poll
+      # window for replication lag) instead of trusting exit codes alone.
+      - name: Verify registry publishes
+        run: node scripts/verify-publishes.mjs
