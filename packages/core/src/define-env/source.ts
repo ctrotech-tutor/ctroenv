@@ -15,13 +15,11 @@ function tryProcessEnv(): EnvSource | undefined {
 
 function tryImportMetaEnv(): EnvSource | undefined {
   try {
-    const meta = import.meta as unknown as Record<
-      string,
-      Record<string, string | undefined> | undefined
-    >
-    const env = meta.env
+    // Member access only (`import.meta.env` style): bundlers (webpack/Next.js)
+    // warn on whole-object access ("Critical dependency ... is unsupported").
+    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env
     if (env) {
-      return { get: (key) => env[key] as string | undefined }
+      return { get: (key) => env[key] }
     }
   } catch {
     // Not in an ESM environment

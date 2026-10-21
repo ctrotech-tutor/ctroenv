@@ -1,5 +1,10 @@
+import { readdirSync, readFileSync } from "node:fs"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { afterAll, describe, expect, it } from "vitest"
 import { detectSource, objectSource } from "../../define-env/source"
+
+const here = dirname(fileURLToPath(import.meta.url))
 
 describe("EnvSource", () => {
   describe("objectSource()", () => {
@@ -95,6 +100,22 @@ describe("EnvSource", () => {
     it("returns undefined for missing key in all sources", () => {
       const source = detectSource()
       expect(source.get("__CTROENV_UTTERLY_NONEXISTENT__")).toBeUndefined()
+    })
+  })
+
+  describe("bundler safety", () => {
+    it("never accesses bare import.meta (webpack Critical-dependency tripwire)", () => {
+      // Only `import.meta.<prop>` member access survives bundlers without
+      // warnings; whole-object access litters Next.js builds with noise. The
+      // sanctioned `(import.meta as T).prop` cast pattern emits member access,
+      // so it is stripped before asserting.
+      const files = readdirSync(resolve(here, "..")).filter((f) => f.endsWith(".ts"))
+      expect(files.length).toBeGreaterThan(0)
+      for (const file of files) {
+        const content = readFileSync(resolve(here, "..", file), "utf-8")
+        const stripped = content.replace(/\(\s*import\.meta\s+as\b[^)]*\)\s*\./g, "MEMBER.")
+        expect(stripped).not.toMatch(/import\.meta(?!\.)/)
+      }
     })
   })
 })
