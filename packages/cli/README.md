@@ -62,18 +62,21 @@ ctroenv generate [--schema <path>] [--output <path>] [--no-comments]
 CI-friendly diff of .env vs schema.
 
 ```
-ctroenv check [--schema <path>] [--source <path>] [--strict] [--warn-unknown] [--json]
+ctroenv check [--schema <path>] [--source <path>] [--example [path]] [--strict] [--warn-unknown] [--json]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--schema <path>` | Config `schema` or auto-discovery | Path to schema file |
 | `--source <path>` | Config `sources.default` or `".env"` | Path to `.env` file |
+| `--example [path]` | Off; path defaults to config `output.example` or `".env.example"` | Also verify the example file declares every schema variable |
 | `--strict` | `false` | Also validate values against schema |
 | `--warn-unknown` | `false` | Warn about keys in source not in schema (with "did you mean?" suggestions) |
 | `--json` | `false` | Output JSON instead of formatted text |
 
-Exit code `0` on success, `1` on missing/unused keys or validation errors.
+`--example` compares the schema against the example file's declared keys. Commented-out declarations (`# KEY=`, as emitted by `generate` for secrets and required variables) count as declared; example values are never validated since they are placeholders by design.
+
+Exit code `0` on success, `1` on missing/unused keys, example drift, or validation errors.
 
 ### `docs`
 

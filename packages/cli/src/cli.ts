@@ -146,6 +146,10 @@ program
   .description("Compare .env against schema")
   .option("--schema <path>", "Path to schema file (overrides config and discovery)")
   .option("--source <path>", "Source env file to check")
+  .option(
+    "--example [path]",
+    "Also verify the example file declares every schema variable (defaults to config output.example)",
+  )
   .option("--strict", "Also validate values against schema")
   .option("--warn-unknown", "Warn about env vars in source not present in schema")
   .option("--json", "Output JSON instead of formatted text")
@@ -154,6 +158,10 @@ program
       return checkCommand({
         schema,
         source: opts.source ?? config.sources?.default ?? ".env",
+        example:
+          opts.example === true
+            ? (config.output?.example ?? ".env.example")
+            : opts.example || undefined,
         strict: !!opts.strict,
         warnUnknown: !!opts.warnUnknown,
         json: opts.json ? "json" : "text",
