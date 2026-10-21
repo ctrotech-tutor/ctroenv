@@ -82,7 +82,7 @@ The returned env object uses a `Proxy` to enforce access control at runtime:
 - **Server side:** All keys from both `server` and `client` schemas are accessible.
 - **Client side:** Only `client` keys are accessible. Accessing a `server` key throws an error with a message suggesting `NEXT_PUBLIC_` prefix.
 - **Secret values:** Keys marked with `.secret()` are masked to `"********"` (or custom `maskWith`). Raw values are accessible via `env.meta.get("KEY")`.
-- **`meta` object:** Non-enumerable property providing `.get()`, `.has()`, `.keys()`, and `.toJSON()`.
+- **`meta` object:** Non-enumerable property providing `.get()`, `.has()`, `.keys()`, and `.toJSON()`. On the server it covers server and client keys; on the client it covers client keys only. Secrets stay masked in `.toJSON()`; `.get()` is the explicit raw accessor (never log its result).
 
 ### Secret Values
 

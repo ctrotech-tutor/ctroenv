@@ -3,6 +3,7 @@ import {
   CtroEnvError,
   defineEnv as coreDefineEnv,
   detectSource,
+  type EnvMeta,
   type InferredClientServerEnv,
 } from "@ctroenv/core"
 
@@ -56,24 +57,43 @@ function createEnvProxy<T extends NextSchemaDefinition>(
   const serverKeySet = new Set(serverKeys)
   const combined = { ...server, ...client }
 
-  function getMeta():
-    | {
-        get(k: string): string | undefined
-        has(k: string): boolean
-        keys(): string[]
-        toJSON(): Record<string, string | undefined>
-      }
-    | undefined {
-    const srvMeta = (server as Record<string, unknown> & { meta?: unknown }).meta
-    if (srvMeta && typeof (srvMeta as { get: unknown }).get === "function")
-      return srvMeta as ReturnType<typeof getMeta>
-    const cliMeta = (client as Record<string, unknown> & { meta?: unknown }).meta
-    if (cliMeta && typeof (cliMeta as { get: unknown }).get === "function")
-      return cliMeta as ReturnType<typeof getMeta>
+  function extractMeta(result: Record<string, unknown>): EnvMeta | undefined {
+    const candidate = (result as { meta?: unknown }).meta
+    if (candidate && typeof (candidate as EnvMeta).get === "function") {
+      return candidate as EnvMeta
+    }
     return undefined
   }
 
-  const meta = getMeta()
+  function combineMeta(
+    serverMeta: EnvMeta | undefined,
+    clientMeta: EnvMeta | undefined,
+  ): EnvMeta | undefined {
+    if (!serverMeta) return clientMeta
+    if (!clientMeta) return serverMeta
+    // Server wins on collision, matching property reads (serverKeySet is
+    // checked first). Masking is preserved: both toJSON()s mask secrets.
+    return {
+      get: (key) => serverMeta.get(key) ?? clientMeta.get(key),
+      has: (key) => serverMeta.has(key) || clientMeta.has(key),
+      keys: () => [
+        ...serverMeta.keys(),
+        ...clientMeta.keys().filter((key) => !serverMeta.has(key)),
+      ],
+      toJSON: () => {
+        // Server keys first, matching keys() order; server wins collisions.
+        const out = serverMeta.toJSON()
+        for (const [key, value] of Object.entries(clientMeta.toJSON())) {
+          if (!(key in out)) out[key] = value
+        }
+        return out
+      },
+    }
+  }
+
+  // On the client, `server` is a bare {} with no meta, so this naturally
+  // resolves to the client-only meta — server values stay unreachable.
+  const meta = combineMeta(extractMeta(server), extractMeta(client))
   if (meta) Object.freeze(meta)
 
   return new Proxy({} as InferredNextEnv<T>, {
