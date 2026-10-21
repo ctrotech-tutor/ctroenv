@@ -1,3 +1,10 @@
+# [@ctroenv/vite-v1.0.6](https://github.com/ctrotech-tutor/ctroenv/compare/vite-v1.0.5...vite-v1.0.6) (2026-10-21)
+
+
+### Bug Fixes
+
+* **vite:** ship a browser-safe entry so client bundles build ([c2e23b4](https://github.com/ctrotech-tutor/ctroenv/commit/c2e23b48dc6ea03275c1596ceafacd6135e287a4))
+
 # [@ctroenv/vite-v1.0.5](https://github.com/ctrotech-tutor/ctroenv/compare/vite-v1.0.4...vite-v1.0.5) (2026-10-21)
 
 
