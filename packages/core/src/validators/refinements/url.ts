@@ -32,6 +32,6 @@ export function url(): <T extends string>(v: Validator<T>) => Validator<T> {
           }),
         )
       }
-    }, validator.metadata)
+    }, { ...validator.metadata, typeLabel: "url" })
   }
 }

@@ -48,21 +48,27 @@ function stringBase(): Validator<string> {
 function wrapRefinement(
   current: Validator<string>,
   fn: (v: string) => string | undefined,
+  typeLabel?: string,
 ): Validator<string> {
-  return createValidator<string>((input: unknown, context: ParseContext) => {
-    const result = current.parse(input, context)
-    if (!result.success) return result
-    const errorMsg = fn(result.value)
-    if (errorMsg) {
-      return singleError(errInvalid(context.key, result.value, errorMsg))
-    }
-    return result
-  }, current.metadata)
+  return createValidator<string>(
+    (input: unknown, context: ParseContext) => {
+      const result = current.parse(input, context)
+      if (!result.success) return result
+      const errorMsg = fn(result.value)
+      if (errorMsg) {
+        return singleError(errInvalid(context.key, result.value, errorMsg))
+      }
+      return result
+    },
+    // Format refinements (url, email, …) brand the label; pure constraints
+    // (min, max, regex) keep the current one.
+    typeLabel === undefined ? current.metadata : { ...current.metadata, typeLabel },
+  )
 }
 
 const stringMethods: SpecificMethods<string> = (current) => {
-  const refine = (fn: (v: string) => string | undefined): StringValidator =>
-    applyChain(wrapRefinement(current, fn), stringMethods) as StringValidator
+  const refine = (fn: (v: string) => string | undefined, typeLabel?: string): StringValidator =>
+    applyChain(wrapRefinement(current, fn, typeLabel), stringMethods) as StringValidator
 
   return {
     url: () =>
@@ -74,14 +80,14 @@ const stringMethods: SpecificMethods<string> = (current) => {
         } catch {
           return "Invalid URL"
         }
-      }),
+      }, "url"),
 
     email: () =>
       refine((v) => {
         const re =
           /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
         return re.test(v) ? undefined : "Invalid email address"
-      }),
+      }, "email"),
 
     hostname: () =>
       refine((v) => {
@@ -98,13 +104,13 @@ const stringMethods: SpecificMethods<string> = (current) => {
             return `Hostname label contains invalid characters: "${label}"`
         }
         return undefined
-      }),
+      }, "hostname"),
 
     port: () =>
       refine((v) => {
         const n = Number(v)
         return Number.isInteger(n) && n >= 1 && n <= 65535 ? undefined : "Invalid port number"
-      }),
+      }, "port"),
 
     min: (length: number) =>
       refine((v) => (v.length >= length ? undefined : `Must be at least ${length} characters`)),

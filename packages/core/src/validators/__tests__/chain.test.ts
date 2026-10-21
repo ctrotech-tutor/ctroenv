@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { number } from "../number"
+import { email, integer, max, min, port, regex, url } from "../refinements"
 import { string } from "../string"
 
 describe("chainable methods", () => {
@@ -200,6 +201,48 @@ describe("chainable methods", () => {
       expect("min" in v).toBe(false)
       expect(v.metadata.isSecret).toBe(true)
       expect(v.metadata.optional).toBe(true)
+    })
+  })
+
+  describe("type labels", () => {
+    it("format refinements set the label", () => {
+      expect(string().url().metadata.typeLabel).toBe("url")
+      expect(string().email().metadata.typeLabel).toBe("email")
+      expect(string().hostname().metadata.typeLabel).toBe("hostname")
+      expect(string().port().metadata.typeLabel).toBe("port")
+      expect(number().port().metadata.typeLabel).toBe("port")
+    })
+
+    it("constraint refinements keep the label", () => {
+      expect(string().min(1).metadata.typeLabel).toBe("string")
+      expect(string().regex(/x/).metadata.typeLabel).toBe("string")
+      expect(string().url().min(1).max(99).metadata.typeLabel).toBe("url")
+      expect(number().int().metadata.typeLabel).toBe("number")
+      expect(number().port().int().positive().min(1).max(99).metadata.typeLabel).toBe("port")
+    })
+
+    it("last format wins", () => {
+      expect(string().url().email().metadata.typeLabel).toBe("email")
+    })
+
+    it("generic methods preserve the label", () => {
+      expect(string().url().secret().describe("x").optional().metadata.typeLabel).toBe("url")
+      expect(number().default(8080).port().metadata.typeLabel).toBe("port")
+    })
+
+    it("standalone format refinements set the label", () => {
+      expect(url()(string()).metadata.typeLabel).toBe("url")
+      expect(email()(string()).metadata.typeLabel).toBe("email")
+      expect(port()(number()).metadata.typeLabel).toBe("port")
+      expect(port()(string()).metadata.typeLabel).toBe("port")
+    })
+
+    it("standalone constraint refinements keep the label", () => {
+      expect(min(1)(string()).metadata.typeLabel).toBe("string")
+      expect(max(99)(number()).metadata.typeLabel).toBe("number")
+      expect(regex(/x/)(string()).metadata.typeLabel).toBe("string")
+      expect(integer()(number()).metadata.typeLabel).toBe("number")
+      expect(min(1)(url()(string())).metadata.typeLabel).toBe("url")
     })
   })
 })

@@ -60,21 +60,26 @@ function numberBase(): Validator<number> {
 function wrapRefinement(
   current: Validator<number>,
   fn: (v: number) => string | undefined,
+  typeLabel?: string,
 ): Validator<number> {
-  return createValidator<number>((input: unknown, context: ParseContext) => {
-    const result = current.parse(input, context)
-    if (!result.success) return result
-    const errorMsg = fn(result.value)
-    if (errorMsg) {
-      return singleError(errInvalid(context.key, result.value, errorMsg))
-    }
-    return result
-  }, current.metadata)
+  return createValidator<number>(
+    (input: unknown, context: ParseContext) => {
+      const result = current.parse(input, context)
+      if (!result.success) return result
+      const errorMsg = fn(result.value)
+      if (errorMsg) {
+        return singleError(errInvalid(context.key, result.value, errorMsg))
+      }
+      return result
+    },
+    // .port() brands the label; pure constraints keep the current one.
+    typeLabel === undefined ? current.metadata : { ...current.metadata, typeLabel },
+  )
 }
 
 const numberMethods: SpecificMethods<number> = (current) => {
-  const refine = (fn: (v: number) => string | undefined): NumberValidator =>
-    applyChain(wrapRefinement(current, fn), numberMethods) as NumberValidator
+  const refine = (fn: (v: number) => string | undefined, typeLabel?: string): NumberValidator =>
+    applyChain(wrapRefinement(current, fn, typeLabel), numberMethods) as NumberValidator
 
   return {
     int: () => refine((v) => (Number.isInteger(v) ? undefined : `Expected an integer, received ${v}`)),
@@ -83,10 +88,12 @@ const numberMethods: SpecificMethods<number> = (current) => {
       refine((v) => (v > 0 ? undefined : `Expected a positive number, received ${v}`)),
 
     port: () =>
-      refine((v) =>
-        Number.isInteger(v) && v >= 1 && v <= 65535
-          ? undefined
-          : `Expected a port number (1-65535), received ${v}`,
+      refine(
+        (v) =>
+          Number.isInteger(v) && v >= 1 && v <= 65535
+            ? undefined
+            : `Expected a port number (1-65535), received ${v}`,
+        "port",
       ),
 
     min: (value: number) =>

@@ -19,6 +19,6 @@ export function port(): <T extends number | string>(v: Validator<T>) => Validato
           value: result.value,
         }),
       )
-    }, validator.metadata)
+    }, { ...validator.metadata, typeLabel: "port" })
   }
 }

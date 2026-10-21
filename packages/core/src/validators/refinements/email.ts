@@ -21,6 +21,6 @@ export function email(): <T extends string>(v: Validator<T>) => Validator<T> {
           value: result.value,
         }),
       )
-    }, validator.metadata)
+    }, { ...validator.metadata, typeLabel: "email" })
   }
 }
