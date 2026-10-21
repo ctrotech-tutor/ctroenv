@@ -1,6 +1,6 @@
 {
   "name": "@ctroenv/node",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Node.js adapter for CtroEnv — process.env source and .env file loading",
   "type": "module",
   "exports": {
