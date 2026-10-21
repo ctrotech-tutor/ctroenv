@@ -10,6 +10,7 @@ export interface WatchEnvOptions extends DefineEnvOptions {
   pollInterval?: number
   onChange?: (key: string, oldValue: unknown, newValue: unknown) => void
   onError?: (errors: readonly ValidationError[]) => void
+  signal?: AbortSignal
 }
 
 export type WatchEnvResult<T extends SchemaDefinition> = EnvResult<T> & {
@@ -30,6 +31,7 @@ export function watchEnv<T extends SchemaDefinition>(
 
   const prefix = opts?.prefix
   const pollInterval = opts?.pollInterval ?? 500
+  const signal = opts?.signal
 
   const initial = walkSchema(schema, source, prefix)
   if (initial.errors.length > 0) {
@@ -57,6 +59,11 @@ export function watchEnv<T extends SchemaDefinition>(
       clearInterval(intervalId)
       intervalId = undefined
     }
+    signal?.removeEventListener("abort", onAbort)
+  }
+
+  function onAbort(): void {
+    unwatch()
   }
 
   function poll(): void {
@@ -76,6 +83,14 @@ export function watchEnv<T extends SchemaDefinition>(
 
     const result = walkSchema(schema, source, prefix)
 
+    // The change was observed even when validation fails: sync the baseline
+    // now so onError fires once per distinct change, not on every poll.
+    // Values stay stale until a change validates (walkSchema recomputes
+    // everything from the current source on success, so nothing is lost).
+    for (const [key, raw] of newRaw) {
+      lastRaw.set(key, raw)
+    }
+
     if (result.errors.length > 0) {
       opts?.onError?.(result.errors)
       return
@@ -89,13 +104,12 @@ export function watchEnv<T extends SchemaDefinition>(
         opts?.onChange?.(key, oldVal, newVal)
       }
     }
-
-    for (const [key, raw] of newRaw) {
-      lastRaw.set(key, raw)
-    }
   }
 
-  intervalId = setInterval(poll, pollInterval)
+  if (signal?.aborted !== true) {
+    intervalId = setInterval(poll, pollInterval)
+    signal?.addEventListener("abort", onAbort, { once: true })
+  }
 
   const extraMethods: Record<string, () => void> = { unwatch }
 
