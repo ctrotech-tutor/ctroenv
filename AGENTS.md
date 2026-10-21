@@ -126,7 +126,7 @@ catch (e) {
 | Package | Import | Source |
 |---------|--------|--------|
 | `@ctroenv/node` | `loadEnv()`, `parseEnvFile()` | `process.env` + `.env` files; `loadEnv({ native })` for system env |
-| `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `import.meta.env` |
+| `@ctroenv/vite` | `viteSource()`, `ctroenvPlugin()` | `viteSource()`: `import.meta.env` → `process.env`; plugin: Vite `loadEnv()` + `process.env` |
 | `@ctroenv/nextjs` | `defineEnv()`, `withCtroEnv()` | Server/client split |
 
 ### CLI (`@ctroenv/cli`)
