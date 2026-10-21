@@ -61,16 +61,20 @@ Simple `process.env` wrapper. Use when you don't need `.env` file loading.
 parseEnvFile(content: string): Record<string, string>
 ```
 
-Parses a raw `.env` file string. Supports:
+Parses a raw `.env` file string. The grammar matches `dotenv`, so files behave identically whether they are read here, by the CLI, or by Vite:
 
-- Comments (`#`)
-- `export KEY=val` prefix
-- Quoted values (`"..."` and `'...'`)
-- Inline comments: `KEY=val # comment`
-- Multiline values with trailing `\`
-- Variable interpolation: `KEY=$OTHER` and `KEY=${OTHER}`
-- Escaped quotes: `KEY=it's` or `KEY=val\"ue`
-- `$$` escaping for literal dollar signs
+- Keys must match `[\w.-]+`; anything else is skipped.
+- Separators are `=` (surrounding spaces allowed) or `:` followed by whitespace. `KEY:val` (no space) and `KEY : val` do not parse.
+- Full-line comments (`# ...`) and blank lines are skipped; `export KEY=val` prefixes are accepted.
+- `#` starts a comment in **unquoted** values — even without a preceding space (`KEY=pass#123` parses as `pass`). Quote values that contain `#`: `SECRET="pass#123"`.
+- Double-quoted values may span lines; `\n` and `\r` sequences expand.
+- Single-quoted and backtick-quoted values are fully literal (no escape processing) and may span lines. Use double quotes when escapes are needed.
+
+CtroEnv extensions beyond `dotenv`:
+
+- Variable interpolation: `KEY=$OTHER` and `KEY=${OTHER}`, resolved from earlier file entries then `process.env`; `$$` escapes to a literal `$`.
+- Trailing-`\` continuations join unquoted values across lines.
+- `\"` inside double-quoted values unescapes to `"` (matching shell, Python, and Ruby dotenv; plain `dotenv` keeps the backslash).
 
 ## Documentation
 
