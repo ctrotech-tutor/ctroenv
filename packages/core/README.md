@@ -102,8 +102,9 @@ Re-validates environment variables when the source changes. Useful for long-runn
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `source` | `EnvSource` | Auto-detected | Env source to watch |
-| `pollInterval` | `number` | `2000` | Poll interval in ms |
+| `pollInterval` | `number` | `500` | Poll interval in ms |
 | `onChange` | `(key, oldVal, nextVal) => void` | — | Called when a value changes |
+| `onError` | `(errors) => void` | — | Called when re-validation fails (once per change; values stay stale until a change validates) |
 | `signal` | `AbortSignal` | — | Stop watching on abort |
 
 ```ts

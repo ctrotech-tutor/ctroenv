@@ -43,6 +43,13 @@
   "homepage": "https://ctroenv.vercel.app",
   "bugs": "https://github.com/ctrotech-tutor/ctroenv/issues",
   "license": "MIT",
+  "release": {
+    "extends": [
+      "../../.releaserc.json",
+      "semantic-release-monorepo"
+    ],
+    "tagFormat": "core-v${version}"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": false

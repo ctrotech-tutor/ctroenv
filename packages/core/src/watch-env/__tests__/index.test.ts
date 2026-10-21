@@ -159,6 +159,104 @@ describe("watchEnv()", () => {
     env.unwatch()
   })
 
+  it("fires onError once per distinct invalid change (no per-poll spam)", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { KEY: "https://example.com" }
+    let calls = 0
+
+    const env = watchEnv(
+      { KEY: string().url() },
+      {
+        source,
+        pollInterval: 100,
+        onError() {
+          calls += 1
+        },
+      },
+    )
+
+    source.KEY = "not-a-url"
+    vi.advanceTimersByTime(500)
+
+    expect(calls).toBe(1)
+    expect(env.KEY).toBe("https://example.com")
+    env.unwatch()
+  })
+
+  it("fires onError again on a new invalid change and recovers after", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { KEY: "https://example.com" }
+    let calls = 0
+
+    const env = watchEnv(
+      { KEY: string().url() },
+      {
+        source,
+        pollInterval: 100,
+        onError() {
+          calls += 1
+        },
+      },
+    )
+
+    source.KEY = "bad-one"
+    vi.advanceTimersByTime(200)
+    expect(calls).toBe(1)
+
+    source.KEY = "bad-two"
+    vi.advanceTimersByTime(100)
+    expect(calls).toBe(2)
+
+    source.KEY = "https://recovered.example.com"
+    vi.advanceTimersByTime(100)
+    expect(calls).toBe(2)
+    expect(env.KEY).toBe("https://recovered.example.com")
+    env.unwatch()
+  })
+
+  it("stops polling when the signal aborts", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { KEY: "initial" }
+    const controller = new AbortController()
+
+    const env = watchEnv(
+      { KEY: string() },
+      { source, pollInterval: 100, signal: controller.signal },
+    )
+
+    source.KEY = "updated"
+    vi.advanceTimersByTime(100)
+    expect(env.KEY).toBe("updated")
+
+    controller.abort()
+    expect(vi.getTimerCount()).toBe(0)
+
+    source.KEY = "ignored"
+    vi.advanceTimersByTime(1000)
+    expect(env.KEY).toBe("updated")
+    env.unwatch()
+  })
+
+  it("does not poll when the signal is already aborted", () => {
+    vi.useFakeTimers()
+    const source: Record<string, string | undefined> = { KEY: "initial" }
+    const controller = new AbortController()
+    controller.abort()
+
+    const env = watchEnv(
+      { KEY: string() },
+      { source, pollInterval: 100, signal: controller.signal },
+    )
+
+    expect(env.KEY).toBe("initial")
+    expect(vi.getTimerCount()).toBe(0)
+
+    source.KEY = "ignored"
+    vi.advanceTimersByTime(1000)
+    expect(env.KEY).toBe("initial")
+    env.unwatch()
+  })
+
   it("unwatch stops polling", () => {
     vi.useFakeTimers()
     const source: Record<string, string | undefined> = { KEY: "initial" }
